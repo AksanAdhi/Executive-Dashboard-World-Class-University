@@ -5,6 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
 from streamlit_option_menu import option_menu
+from db import get_connection
+
 
 # --- PAGE CONFIG ---
 st.set_page_config(layout="wide", page_title="International Collaboration", page_icon="🌍")
@@ -79,48 +81,85 @@ elif selected_menu == "Colab Space":
     if sub_colab == "Internasional":
         st.markdown('<div class="title-box">International Collaboration</div>', unsafe_allow_html=True)
 
-        st.markdown("""
-        <div style="text-align: center;">
-            <p>Menggunakan data yang disediakan oleh Scopus, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih untuk lembaga tertentu. Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.</p>
-            <p><b>IRN = L / ln(P)</b><br>
-            <i>Di mana:</i><br>
-            <b>L</b> = Total lokasi atau negara yang dicakup<br>
-            <b>P</b> = Jumlah total mitra internasional yang berbeda</p>
-
-        </div>
+        st.markdown("""      
+            <div style="text-align: center;">
+                <p>Menggunakan data yang disediakan oleh Scopus, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih untuk lembaga tertentu. Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.</p>
+                <p><b>IRN = L / ln(P)</b><br>
+                <i>Di mana:</i><br>
+                <b>L</b> = Total lokasi atau negara yang dicakup<br>
+                <b>P</b> = Jumlah total mitra internasional yang berbeda</p>
+            </div>
         """, unsafe_allow_html=True)
 
-        selected_collab = st.selectbox("Collaborations", ["Semua Kolaborasi", "FMIPA", "FKIP", "FP", "FH", "FISIP", "FEB", "FT", "FK"])
+        # --- Ambil data dari database
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT ki.*, 
+                j.nama_jurusan, 
+                f.nama_fakultas, 
+                n.nama_negara, 
+                jk.nama_jenis
+            FROM kolaborasi_internasional ki
+            JOIN jurusan j ON ki.id_jurusan = j.id_jurusan
+            JOIN fakultas f ON j.id_fakultas = f.id_fakultas
+            JOIN negara n ON ki.id_negara = n.id_negara
+            JOIN jenis_kolaborasi jk ON ki.id_jenis = jk.id_jenis
+        """)
+        data = cursor.fetchall()
+        df = pd.DataFrame(data)
 
-        collab_data = pd.DataFrame({
-            'country': ['United States', 'Japan', 'United Kingdom', 'China', 'Germany', 'France', 'India', 'Australia', 'Taiwan', 'South Korea', 'Singapore', 'Malaysia'],
-            'lat': [37.7749, 35.6895, 51.5074, 39.9042, 52.52, 48.8566, 28.6139, -35.2809, 23.6978, 37.5665, 1.3521, 3.1390],
-            'lon': [-122.4194, 139.6917, -0.1278, 116.4074, 13.4050, 2.3522, 77.2090, 149.13, 120.9605, 126.9780, 103.8198, 101.6869]
-        })
+        # --- Filter fakultas
+        fakultas_list = sorted(df['nama_fakultas'].unique().tolist())
+        selected_collab = st.selectbox("Collaborations", ["Semua Kolaborasi"] + fakultas_list)
 
+        if selected_collab != "Semua Kolaborasi":
+            df_filtered = df[df['nama_fakultas'] == selected_collab]
+            available_majors = sorted(df_filtered['nama_jurusan'].unique())
+        else:
+            df_filtered = df.copy()
+            available_majors = sorted(df['nama_jurusan'].unique())
+
+        # --- Tambahkan koordinat negara
+        coords = {
+            'Amerika Serikat': [37.7749, -122.4194],
+            'Jepang': [35.6895, 139.6917],
+            'Britania Raya': [51.5074, -0.1278],
+            'Tiongkok': [39.9042, 116.4074],
+            'Jerman': [52.52, 13.4050],
+            'Prancis': [48.8566, 2.3522],
+            'India': [28.6139, 77.2090],
+            'Australia': [-35.2809, 149.13],
+            'Taiwan': [23.6978, 120.9605],
+            'Korea Selatan': [37.5665, 126.9780],
+            'Singapura': [1.3521, 103.8198],
+            'Malaysia': [3.1390, 101.6869],
+            'Thailand': [13.7563, 100.5018],
+            'Filipina': [13.41, 122.56],
+            'Indonesia': [-5.4264, 105.2667]
+        }
+        df_filtered['lat'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[0])
+        df_filtered['lon'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[1])
+
+        # --- Sidebar jurusan
         col_map, col_info = st.columns([4, 1.5])
+        with col_info:
+            jurusan = st.selectbox("Jurusan", ["Pilih Jurusan"] + available_majors)
+            if jurusan != "Pilih Jurusan":
+                df_filtered = df_filtered[df_filtered['nama_jurusan'] == jurusan]
 
-        with col_map:
-            st.pydeck_chart(pdk.Deck(
-                map_style='mapbox://styles/mapbox/light-v9',
-                initial_view_state=pdk.ViewState(latitude=0, longitude=100, zoom=1.2, pitch=0),
-                layers=[
-                    pdk.Layer('ScatterplotLayer', data=collab_data, get_position='[lon, lat]', get_radius=400000,
-                              get_color='[0, 102, 204, 160]', pickable=True),
-                    pdk.Layer("ArcLayer", data=collab_data, get_source_position="[101.3737, -5.3971]",
-                              get_target_position="[lon, lat]", get_source_color=[255, 100, 100],
-                              get_target_color=[0, 100, 255], auto_highlight=True, width_scale=0.5, get_width=2)
-                ],
-            ), height=550)
+        # --- IRN calculation
+        import math
+        L = df_filtered['nama_negara'].nunique()
+        P = len(df_filtered)
+        if P > 1:
+            IRN = round(L / math.log(P), 2)
+        else:
+            IRN = 0
+
 
         with col_info:
-            jurusan = st.selectbox("Jurusan", [
-                "Pilih Jurusan", "Kimia", "Biologi", "Matematika", "Fisika", "Ilmu Komputer",
-                "Ilmu Hukum", "Teknik Elektro", "Pendidikan Dokter", "Ilmu Pemerintahan",
-                "Peternakan", "Teknik Pertanian"
-            ])
-
-            st.markdown("""
+            st.markdown(f"""
             <div style="border-radius: 12px; overflow-y: auto; max-height: 500px; 
                         box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; margin-top: 5px;">
                 <div style="background-color: #ffffff; padding: 1rem;">
@@ -128,44 +167,128 @@ elif selected_menu == "Colab Space":
                     <div style="font-size: 0.9rem;">International Research Network Collaboration</div>
                 </div>
                 <div style="background-color: #e6f0fc; padding: 0.8rem; font-size: 1.6rem; font-weight: bold; color: #1E4EB3;">
-                    16.57
+                    {IRN}
                 </div>
                 <div style="background-color: #ffffff; padding: 0.5rem;font-size: 1.6rem; font-weight: bold;">
                     L
                     <div style="font-weight: normal; font-size: 0.9rem;">Total lokasi atau negara yang dicakup</div>
                 </div>
                 <div style="background-color: #fff8e1; padding: 0.8rem; font-size: 1.6rem; font-weight: bold;">
-                    127
+                    {L}
                 </div>
                 <div style="background-color: #ffffff; padding: 0.5rem; font-size: 1.6rem;font-weight: bold;">
                     P
                     <div style="font-weight: normal; font-size: 0.9rem;">Jumlah total mitra internasional yang berbeda</div>
                 </div>
                 <div style="background-color: #e6f0fc; padding: 0.8rem; font-size: 1.6rem; font-weight: bold; color: #1E4EB3;">
-                    127
+                    {P}
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-        chart_data = pd.DataFrame({
-            'Country': ['United States', 'Japan', 'United Kingdom', 'China', 'Germany', 'France', 'India', 'Australia', 'Taiwan', 'South Korea', 'Singapore', 'Malaysia'],
-            'Dosen Tamu': [13, 3, 8, 10, 8, 9, 20, 13, 8, 10, 9, 5],
-            'Akademik': [9, 16, 7, 5, 10, 20, 13, 10, 3, 15, 10, 10],
-            'Riset dan Publikasi': [12, 15, 2, 12, 12, 13, 8, 9, 10, 15, 15, 13],
-            'Seminar dan Workshop': [10, 13, 0, 10, 9, 8, 6, 9, 5, 10, 9, 13]
-        })
-        melted = chart_data.melt(id_vars="Country", var_name="Jenis", value_name="Jumlah")
-        fig = px.bar(melted, x="Country", y="Jumlah", color="Jenis", barmode="stack", height=500,
-                     color_discrete_map={
-                         "Dosen Tamu": "#FFF1D3",
-                         "Akademik": "#F1DEBB",
-                         "Riset dan Publikasi": "#E7D280",
-                         "Seminar dan Workshop": "#E3BE45"
-                     })
+        # --- Map
+        with col_map:
+            df_map = df_filtered.copy()
+            df_map = df_map[df_map['lat'].notnull() & df_map['lon'].notnull()]
+
+            # Gabungkan tanggal dalam satu kolom string
+            df_map['periode'] = df_map['tanggal_mulai'].astype(str) + " s/d " + df_map['tanggal_selesai'].astype(str)
+
+            # Agregasi data per negara
+            df_map = df_map.groupby(['nama_negara', 'lat', 'lon']) \
+                .agg({
+                    'nama_jenis': lambda x: ', '.join(sorted(set(x))),
+                    'nama_jurusan': 'count',
+                    'periode': lambda x: ', '.join(sorted(set(x)))
+                }).reset_index().rename(columns={
+                    'nama_jurusan': 'jumlah_kolaborasi',
+                    'nama_jenis': 'jenis_kolaborasi'
+                })
+
+            # Ubah layer
+            st.pydeck_chart(pdk.Deck(
+                map_style='mapbox://styles/mapbox/light-v9',
+                initial_view_state=pdk.ViewState(latitude=0, longitude=100, zoom=1.2),
+                layers=[
+                    pdk.Layer(
+                        'ScatterplotLayer',
+                        data=df_map,
+                        get_position='[lon, lat]',
+                        get_radius=400000,
+                        get_color='[0, 102, 204, 160]',
+                        pickable=True
+                    ),
+                    pdk.Layer(
+                        'ArcLayer',
+                        data=df_map,
+                        get_source_position="[105.2667, -5.4264]",
+                        get_target_position="[lon, lat]",
+                        get_source_color=[255, 100, 100],
+                        get_target_color=[0, 100, 255],
+                        auto_highlight=True,
+                        width_scale=0.5,
+                        get_width=2
+                    )
+                ],
+                tooltip={
+                    "html": """
+                        <b>{nama_negara}</b><br/>
+                        Jumlah Kolaborasi: {jumlah_kolaborasi}<br/>
+                        Jenis: {jenis_kolaborasi}<br/>
+                        Periode: {periode}
+                    """,
+                    "style": {
+                        "backgroundColor": "white",
+                        "color": "#1E4EB3",
+                        "fontSize": "14px",
+                        "padding": "10px"
+                    }
+                }
+            ), height=550)
+
+
+
+        # --- Bar Chart
+        chart_df = df_filtered.groupby(['nama_negara', 'nama_jenis']).size().unstack(fill_value=0).reset_index()
+        melted = chart_df.melt(id_vars="nama_negara", var_name="Jenis", value_name="Jumlah")
+
+        fig = px.bar(melted, x="nama_negara", y="Jumlah", color="Jenis", barmode="stack", height=500,
+                    color_discrete_map={
+                        "Dosen Tamu": "#FFF1D3",
+                        "Akademik": "#F1DEBB",
+                        "Riset dan Publikasi": "#E7D280",
+                        "Seminar dan Workshop": "#E3BE45"
+                    })
         st.markdown("## Kolaborasi per Negara")
         st.plotly_chart(fig, use_container_width=True)
 
+        # --- Tabel detail kolaborasi
+ 
+        st.markdown("### 📋 Detail Kolaborasi Internasional")
+        st.dataframe(
+            df_filtered[[
+                'nama_kolaborasi',
+                'nama_negara',
+                'nama_jurusan',
+                'nama_jenis',
+                'tanggal_mulai',
+                'tanggal_selesai'
+            ]].sort_values(by='tanggal_mulai', ascending=False).rename(columns={
+                'nama_kolaborasi': 'Nama Kolaborasi',
+                'nama_negara': 'Negara',
+                'nama_jurusan': 'Jurusan',
+                'nama_jenis': 'Jenis Kolaborasi',
+                'tanggal_mulai': 'Mulai',
+                'tanggal_selesai': 'Selesai'
+            }),
+            use_container_width=True,
+            hide_index=True
+        )
+
+
+
     elif sub_colab == "Nasional":
+
         st.markdown('<div class="title-box">National Collaboration</div>', unsafe_allow_html=True)
 
         st.markdown("""
@@ -178,81 +301,181 @@ elif selected_menu == "Colab Space":
         </div>
         """, unsafe_allow_html=True)
 
-        colA, colB = st.columns([2.7, 1])
-        with colA:
-            selected_collab = st.selectbox("*:blue[Collaborations]*", 
-                ["Fakultas Hukum", "Fakultas Teknik", "FISIP", "FEB", "FMIPA", "FKIP", "FP", "FK"]
-            )
-        with colB:
-            jurusan = st.selectbox("Jurusan", ["Pilih Jurusan", "Ilmu Hukum", "Teknik Sipil", "Manajemen", "Biologi", "Fisika", "Pendidikan Kimia"])
+        # --- Ambil data kolaborasi nasional dari database
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT kn.*, 
+                j.nama_jurusan, 
+                f.nama_fakultas,
+                p.nama_provinsi,
+                jk.nama_jenis
+            FROM kolaborasi_nasional kn
+            JOIN jurusan j ON kn.id_jurusan = j.id_jurusan
+            JOIN fakultas f ON j.id_fakultas = f.id_fakultas
+            JOIN provinsi p ON kn.id_provinsi = p.id_provinsi
+            JOIN jenis_kolaborasi jk ON kn.id_jenis = jk.id_jenis
+        """)
+        data = cursor.fetchall()
+        df = pd.DataFrame(data)
 
-        # Data dummy: LOKASI NASIONAL
-        provinsi_data = pd.DataFrame({
-            'provinsi': ['DKI Jakarta', 'Sumatera Selatan', 'Sumatera Barat', 'Sumatera Utara', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Bali', 'Papua', 'Banten', 'Jambi', 'Bangka Belitung'],
-            'lat': [-6.2, -3.3, -0.9, 3.6, -6.9, -7.0, -7.8, -8.4, -4.3, -6.2, -1.6, -2.7],
-            'lon': [106.8, 104.7, 100.4, 98.7, 107.6, 110.4, 110.4, 115.2, 138.0, 106.1, 103.6, 106.0]
-        })
+        # --- Dropdown fakultas dan jurusan (dinamis)
+        fakultas_list = sorted(df['nama_fakultas'].unique().tolist())
+        selected_fakultas = st.selectbox("Collaborations", ["Semua Kolaborasi"] + fakultas_list)
+
+        if selected_fakultas != "Semua Kolaborasi":
+            df_filtered = df[df['nama_fakultas'] == selected_fakultas]
+            available_majors = sorted(df_filtered['nama_jurusan'].unique())
+        else:
+            df_filtered = df.copy()
+            available_majors = sorted(df['nama_jurusan'].unique())
 
         col_map, col_info = st.columns([4, 1.5])
-        with col_map:
-            st.pydeck_chart(pdk.Deck(
-                map_style='mapbox://styles/mapbox/light-v9',
-                initial_view_state=pdk.ViewState(latitude=-2.5, longitude=117, zoom=3.8, pitch=0),
-                layers=[
-                    pdk.Layer('ScatterplotLayer', data=provinsi_data, get_position='[lon, lat]', get_radius=40000,
-                              get_color='[0, 102, 204, 160]', pickable=True),
-                    pdk.Layer("ArcLayer", data=provinsi_data, get_source_position="[105.2667, -5.4264]",  # Titik Unila
-                              get_target_position="[lon, lat]", get_source_color=[255, 100, 100],
-                              get_target_color=[0, 100, 255], auto_highlight=True, width_scale=0.5, get_width=2)
-                ],
-            ))
 
         with col_info:
-            st.markdown("""
-            <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center;">
+            selected_jurusan = st.selectbox("Jurusan", ["Pilih Jurusan"] + available_majors)
+            if selected_jurusan != "Pilih Jurusan":
+                df_filtered = df_filtered[df_filtered['nama_jurusan'] == selected_jurusan]
+
+        # --- Hitung NRN
+        import math
+        L = df_filtered['nama_provinsi'].nunique()
+        P = len(df_filtered)
+        NRN = round(L / math.log(P), 2) if P > 1 else 0
+
+        with col_info:
+            st.markdown(f"""
+            <div style="border-radius: 12px; overflow-y: auto; max-height: 500px; 
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; margin-top: 5px;">
                 <div style="background-color: #ffffff; padding: 1rem;">
-                    <div style="font-weight: bold; font-size: 1.2rem;">NRN</div>
+                    <div style="font-weight: bold; font-size: 1.6rem;">NRN</div>
                     <div style="font-size: 0.9rem;">National Research Network Collaboration</div>
                 </div>
-                <div style="background-color: #e6f0fc; padding: 0.8rem; font-size: 1.8rem; font-weight: bold; color: #1E4EB3;">
-                    16.57
+                <div style="background-color: #e6f0fc; padding: 0.8rem; font-size: 1.6rem; font-weight: bold; color: #1E4EB3;">
+                    {NRN}
                 </div>
-                <div style="background-color: #ffffff; padding: 0.5rem; font-weight: bold;">
+                <div style="background-color: #ffffff; padding: 0.5rem;font-size: 1.6rem; font-weight: bold;">
                     L
-                    <div style="font-weight: normal; font-size: 0.9rem;">Total lokasi atau negara yang dicakup</div>
+                    <div style="font-weight: normal; font-size: 0.9rem;">Jumlah provinsi yang dicakup</div>
                 </div>
                 <div style="background-color: #fff8e1; padding: 0.8rem; font-size: 1.6rem; font-weight: bold;">
-                    127
+                    {L}
                 </div>
-                <div style="background-color: #ffffff; padding: 0.5rem; font-weight: bold;">
+                <div style="background-color: #ffffff; padding: 0.5rem; font-size: 1.6rem;font-weight: bold;">
                     P
                     <div style="font-weight: normal; font-size: 0.9rem;">Jumlah total mitra nasional yang berbeda</div>
                 </div>
                 <div style="background-color: #e6f0fc; padding: 0.8rem; font-size: 1.6rem; font-weight: bold; color: #1E4EB3;">
-                    127
+                    {P}
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-        # Bar Chart Data
-        chart_data = pd.DataFrame({
-            'Provinsi': ['DKI Jakarta', 'Sumatera Selatan', 'Sumatera Barat', 'Sumatera Utara', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Bali', 'Papua', 'Banten', 'Jambi', 'Bangka Belitung'],
-            'Akademik': [13, 6, 5, 12, 13, 13, 10, 8, 6, 5, 7, 4],
-            'Riset dan Publikasi': [14, 4, 5, 11, 12, 13, 8, 6, 5, 4, 5, 3],
-            'Seminar dan Workshop': [15, 5, 4, 10, 10, 10, 8, 7, 6, 4, 6, 2],
-            'Dosen Tamu': [12, 5, 3, 9, 10, 10, 6, 5, 5, 3, 4, 1]
-        })
+        # --- Koordinat provinsi (sederhana/manual)
+        coords = {
+            'DKI Jakarta': [-6.2, 106.8],
+            'Sumatera Selatan': [-3.3, 104.7],
+            'Sumatera Barat': [-0.9, 100.4],
+            'Sumatera Utara': [3.6, 98.7],
+            'Jawa Barat': [-6.9, 107.6],
+            'Jawa Tengah': [-7.0, 110.4],
+            'DI Yogyakarta': [-7.8, 110.4],
+            'Bali': [-8.4, 115.2],
+            'Papua': [-4.3, 138.0],
+            'Banten': [-6.2, 106.1],
+            'Jambi': [-1.6, 103.6],
+            'Bangka Belitung': [-2.7, 106.0],
+            'Nusa Tenggara Barat': [-8.7, 117.0],
+            'Sulawesi Tenggara': [-4.160, 122.163],
+            'Sulawesi Utara' : [0.624, 123.975],
 
-        melted = chart_data.melt(id_vars="Provinsi", var_name="Jenis", value_name="Jumlah")
-        fig = px.bar(melted, x="Provinsi", y="Jumlah", color="Jenis", barmode="stack", height=500,
-                     color_discrete_map={
-                         "Dosen Tamu": "#A1D3A2",
-                         "Akademik": "#F1DEBB",
-                         "Riset dan Publikasi": "#E7D280",
-                         "Seminar dan Workshop": "#E3BE45"
-                     })
+        }
+        df_filtered['lat'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[0])
+        df_filtered['lon'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[1])
+
+        # --- Peta interaktif
+        with col_map:
+            df_map = df_filtered.groupby(['nama_provinsi', 'lat', 'lon']) \
+                .agg({'nama_jenis': lambda x: ', '.join(sorted(set(x))), 'nama_jurusan': 'count'}) \
+                .reset_index().rename(columns={
+                    'nama_jurusan': 'jumlah_kolaborasi',
+                    'nama_jenis': 'jenis_kolaborasi'
+                })
+
+            st.pydeck_chart(pdk.Deck(
+                map_style='mapbox://styles/mapbox/light-v9',
+                initial_view_state=pdk.ViewState(latitude=-2.5, longitude=117, zoom=3.8, pitch=0),
+                layers=[
+                    pdk.Layer(
+                        'ScatterplotLayer',
+                        data=df_map,
+                        get_position='[lon, lat]',
+                        get_radius=40000,
+                        get_color='[0, 102, 204, 160]',
+                        pickable=True
+                    ),
+                    pdk.Layer(
+                        'ArcLayer',
+                        data=df_map,
+                        get_source_position="[105.2667, -5.4264]",
+                        get_target_position="[lon, lat]",
+                        get_source_color=[255, 100, 100],
+                        get_target_color=[0, 100, 255],
+                        auto_highlight=True,
+                        width_scale=0.5,
+                        get_width=2
+                    )
+                ],
+                tooltip={
+                    "html": """
+                        <b>{nama_provinsi}</b><br/>
+                        Jumlah Kolaborasi: {jumlah_kolaborasi}<br/>
+                        Jenis: {jenis_kolaborasi}
+                    """,
+                    "style": {
+                        "backgroundColor": "white",
+                        "color": "#1E4EB3",
+                        "fontSize": "14px",
+                        "padding": "10px"
+                    }
+                }
+            ), height=550)
+
+        # --- Bar Chart
+        chart_df = df_filtered.groupby(['nama_provinsi', 'nama_jenis']).size().unstack(fill_value=0).reset_index()
+        melted = chart_df.melt(id_vars="nama_provinsi", var_name="Jenis", value_name="Jumlah")
+        fig = px.bar(melted, x="nama_provinsi", y="Jumlah", color="Jenis", barmode="stack", height=500,
+                    color_discrete_map={
+                        "Dosen Tamu": "#FAF2DC",
+                        "Akademik": "#D0C7A2",
+                        "Riset dan Publikasi": "#99BE8F",
+                        "Seminar dan Workshop": "#76A98D"
+                    })
         st.markdown("## Kolaborasi per Provinsi")
         st.plotly_chart(fig, use_container_width=True)
+
+        # --- Tabel Detail
+        st.markdown("### 📋 Detail Kolaborasi Nasional")
+        st.dataframe(
+            df_filtered[[
+                'nama_kolaborasi',
+                'nama_provinsi',
+                'nama_jurusan',
+                'nama_jenis',
+                'tanggal_mulai',
+                'tanggal_selesai'
+            ]].sort_values(by='tanggal_mulai', ascending=False).rename(columns={
+                'nama_kolaborasi': 'Nama Kolaborasi',
+                'nama_provinsi': 'Provinsi',
+                'nama_jurusan': 'Jurusan',
+                'nama_jenis': 'Jenis Kolaborasi',
+                'tanggal_mulai': 'Mulai',
+                'tanggal_selesai': 'Selesai'
+            }),
+            use_container_width=True,
+            hide_index=True
+        )
+
         
 elif selected_menu == "Faculty Staff":
     # Load dataset
@@ -284,7 +507,7 @@ elif selected_menu == "Faculty Staff":
     with col1:
         selected_years = st.multiselect("📅 Pilih Tahun", options=years, default=years)
     with col2:
-        selected_affiliations = st.multiselect("🏛️ Pilih Afiliasi", options=affiliations, default=affiliations)
+        selected_affiliations = st.multiselect("🏛 Pilih Afiliasi", options=affiliations, default=affiliations)
     with col3:
         selected_faculty_ui = st.multiselect("🏫 Pilih Fakultas", options=dummy_faculties, default=dummy_faculties)
 
@@ -300,7 +523,7 @@ elif selected_menu == "Faculty Staff":
     # Validasi dan Visualisasi
     # ===========================
     if filtered_df.empty:
-        st.warning("⚠️ Tidak ada data yang sesuai dengan filter yang dipilih.")
+        st.warning("⚠ Tidak ada data yang sesuai dengan filter yang dipilih.")
     else:
         fig, axs = plt.subplots(1, 3, figsize=(24, 6))
 
