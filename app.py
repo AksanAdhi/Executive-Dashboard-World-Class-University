@@ -47,6 +47,21 @@ st.markdown("""
             min-width: 130px;
             text-align: center;
         }
+
+        .filter-divider {
+            border-top: 1px solid #ccc;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .selectbox-label {
+            text-align: center;
+            font-weight: bold;
+            color: #1E4EB3;
+            font-size: 16px;
+            margin-bottom: -2.5rem;
+            display: block;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -82,14 +97,19 @@ elif selected_menu == "Colab Space":
         st.markdown('<div class="title-box">International Collaboration</div>', unsafe_allow_html=True)
 
         st.markdown("""      
-            <div style="text-align: center;">
-                <p>Menggunakan data yang disediakan oleh Scopus, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih untuk lembaga tertentu. Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.</p>
-                <p><b>IRN = L / ln(P)</b><br>
-                <i>Di mana:</i><br>
-                <b>L</b> = Total lokasi atau negara yang dicakup<br>
-                <b>P</b> = Jumlah total mitra internasional yang berbeda</p>
+            <div style="text-align: center; color: #0b2a65; font-size: 16px;">
+                Menggunakan data yang disediakan oleh Scopus, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. 
+                Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih 
+                untuk lembaga tertentu. Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.
+                <br><br>
+                <span style="font-size:16px;">Secara spesifik, indeks QS International Research Network dihitung dengan rumus sebagai berikut:</span>
+                <br>
+                <span style="font-size: 18px; font-weight: bold;">IRN = L / ln P</span>
+                <br>
+                <span style="font-size: 12px;">Di mana: L = Total lokasi / negara yang dicakup dan P = Jumlah total mitra internasional yang berbeda</span>
             </div>
         """, unsafe_allow_html=True)
+
 
         # --- Ambil data dari database
         conn = get_connection()
@@ -110,8 +130,15 @@ elif selected_menu == "Colab Space":
         df = pd.DataFrame(data)
 
         # --- Filter fakultas
+        st.markdown('<div class="filter-divider"></div>', unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="filter-section">
+                <span class="selectbox-label">Collaborations</span>
+            </div>
+        """, unsafe_allow_html=True)                                                    
         fakultas_list = sorted(df['nama_fakultas'].unique().tolist())
-        selected_collab = st.selectbox("Collaborations", ["Semua Kolaborasi"] + fakultas_list)
+        selected_collab = st.selectbox("", ["Semua Kolaborasi"] + fakultas_list)
 
         if selected_collab != "Semua Kolaborasi":
             df_filtered = df[df['nama_fakultas'] == selected_collab]
@@ -290,16 +317,21 @@ elif selected_menu == "Colab Space":
     elif sub_colab == "Nasional":
 
         st.markdown('<div class="title-box">National Collaboration</div>', unsafe_allow_html=True)
-
-        st.markdown("""
-        <div style="text-align: center;">
-            <p>Menggunakan data yang disediakan oleh Universitas, indikator ini menilai tingkat keterbukaan nasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian nasional yang dipilih untuk lembaga tertentu. Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian nasional.</p>
-            <p><b>NRN = L / ln(P)</b><br>
-            <i>Di mana:</i><br>
-            <b>L</b> = Total lokasi / provinsi yang dicakup<br>
-            <b>P</b> = Jumlah total mitra nasional yang berbeda</p>
-        </div>
+        st.markdown("""      
+            <div style="text-align: center; color: #0b2a65; font-size: 16px;">
+                Menggunakan data yang disediakan oleh Universitas, indikator ini menilai tingkat keterbukaan nasional dalam hal kolaborasi 
+                untuk setiap lembaga yang dievaluasi. Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk 
+                memperkirakan kekayaan mitra penelitian nasional yang dipilih untuk lembaga tertentu. Tujuan di balik indikator ini adalah 
+                untuk mengukur keragaman kemitraan penelitian nasional.
+                <br><br>
+                <span style="font-size:16px;">Secara spesifik, indeks National Research Network dihitung dengan rumus sebagai berikut:</span>
+                <br>
+                <span style="font-size: 18px; font-weight: bold;">NRN = L / ln P</span>
+                <br>
+                <span style="font-size: 12px;">Di mana: L = Total lokasi / provinsi yang dicakup dan P = Jumlah total mitra nasional yang berbeda</span>
+            </div>
         """, unsafe_allow_html=True)
+
 
         # --- Ambil data kolaborasi nasional dari database
         conn = get_connection()
@@ -320,8 +352,15 @@ elif selected_menu == "Colab Space":
         df = pd.DataFrame(data)
 
         # --- Dropdown fakultas dan jurusan (dinamis)
+        st.markdown('<div class="filter-divider"></div>', unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="filter-section">
+                <span class="selectbox-label">Collaborations</span>
+            </div>
+        """, unsafe_allow_html=True)                                              
         fakultas_list = sorted(df['nama_fakultas'].unique().tolist())
-        selected_fakultas = st.selectbox("Collaborations", ["Semua Kolaborasi"] + fakultas_list)
+        selected_fakultas = st.selectbox("", ["Semua Kolaborasi"] + fakultas_list)
 
         if selected_fakultas != "Semua Kolaborasi":
             df_filtered = df[df['nama_fakultas'] == selected_fakultas]
@@ -374,22 +413,25 @@ elif selected_menu == "Colab Space":
         # --- Koordinat provinsi (sederhana/manual)
         coords = {
             'DKI Jakarta': [-6.2, 106.8],
-            'Sumatera Selatan': [-3.3, 104.7],
-            'Sumatera Barat': [-0.9, 100.4],
-            'Sumatera Utara': [3.6, 98.7],
             'Jawa Barat': [-6.9, 107.6],
             'Jawa Tengah': [-7.0, 110.4],
             'DI Yogyakarta': [-7.8, 110.4],
-            'Bali': [-8.4, 115.2],
-            'Papua': [-4.3, 138.0],
+            'Jawa Timur': [-7.5, 112.7],
             'Banten': [-6.2, 106.1],
-            'Jambi': [-1.6, 103.6],
-            'Bangka Belitung': [-2.7, 106.0],
-            'Nusa Tenggara Barat': [-8.7, 117.0],
+            'Bali': [-8.4, 115.2],
+            'Nusa Tenggara Barat': [-8.652, 117.361],
+            'Nusa Tenggara Timur': [-10.177, 123.607],
+            'Kalimantan Barat': [-0.029, 109.342],
+            'Kalimantan Tengah': [-1.681, 113.382],
+            'Kalimantan Selatan': [-3.319, 114.591],
+            'Kalimantan Timur': [0.538, 116.419],
+            'Kalimantan Utara': [3.073, 117.645],
+            'Sulawesi Utara': [1.493, 124.842],
+            'Sulawesi Tengah': [-0.893, 119.894],
+            'Sulawesi Selatan': [-5.135, 119.412],
             'Sulawesi Tenggara': [-4.160, 122.163],
-            'Sulawesi Utara' : [0.624, 123.975],
-
         }
+
         df_filtered['lat'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[0])
         df_filtered['lon'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[1])
 
