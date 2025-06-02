@@ -816,63 +816,84 @@ elif selected_menu == "Student Inbound-Outbound":
 elif selected_menu == "Alumni":
     st.markdown('<div class="title-box">🎓 Alumni</div>', unsafe_allow_html=True)
 
-    # Load dataset
-    data = pd.read_csv("data_alumni_dummy_100.csv")
+    # Koneksi ke database
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Ambil data dari database alumni
+    cursor.execute("""
+        SELECT 
+            a.nama, 
+            a.tahun_lulus AS `Tahun Lulus`, 
+            f.nama_fakultas AS Fakultas,
+            p.nama_prodi AS `Program Studi`,
+            s.posisi_kerja AS `Status Kerja`,
+            CONCAT(DATEDIFF(MONTH, a.tahun_lulus, a.waktu_dapat_kerja), ' Bulan') AS `Waktu Mendapatkan Kerja`
+        FROM alumni a
+        JOIN program_studi p ON a.program_studi_id = p.id
+        JOIN fakultas f ON p.fakultas_id = f.id
+        LEFT JOIN status_kerja s ON a.status_kerja_id = s.id
+        WHERE a.waktu_dapat_kerja IS NOT NULL
+    """)
+    data = cursor.fetchall()
     df = pd.DataFrame(data)
 
-    # Filter Tahun
-    tahun_list = sorted(df['Tahun Lulus'].dropna().unique())
-    selected_tahun = st.multiselect("Pilih Tahun Lulus", tahun_list, default=tahun_list)
+    if df.empty:
+        st.warning("⚠ Tidak ada data alumni ditemukan.")
+    else:
+        # Filter Tahun
+        tahun_list = sorted(df['Tahun Lulus'].dropna().unique())
+        selected_tahun = st.multiselect("Pilih Tahun Lulus", tahun_list, default=tahun_list)
 
-    # Filter data
-    filtered_df = df[df['Tahun Lulus'].isin(selected_tahun)]
+        # Filter data
+        filtered_df = df[df['Tahun Lulus'].isin(selected_tahun)]
 
-    # 🎨 Warna Kustom
-    custom_colors_fakultas = ['#FF0000', '#ff7f0e', '#00FF00', '#800080', '#4ab4ea']
-    custom_colors_status = ['#EF476F','#FFD166','#06D6A0','#118AB2','#9D4EDD','#FF9F1C']
+        # 🎨 Warna Kustom
+        custom_colors_fakultas = ['#FF0000', '#ff7f0e', '#00FF00', '#800080', '#4ab4ea']
+        custom_colors_status = ['#EF476F','#FFD166','#06D6A0','#118AB2','#9D4EDD','#FF9F1C']
 
-    # Data untuk bar chart
-    bar_data = filtered_df.groupby(["Tahun Lulus", "Fakultas"]).size().reset_index(name='Jumlah')
+        # Data untuk bar chart
+        bar_data = filtered_df.groupby(["Tahun Lulus", "Fakultas"]).size().reset_index(name='Jumlah')
 
-    # Data untuk donut chart
-    status_counts = filtered_df['Status Kerja'].value_counts().reset_index()
-    status_counts.columns = ['Status Kerja', 'Jumlah']
+        # Data untuk donut chart
+        status_counts = filtered_df['Status Kerja'].value_counts().reset_index()
+        status_counts.columns = ['Status Kerja', 'Jumlah']
 
-    # Buat 2 kolom berdampingan
-    col1, col2 = st.columns([3, 2])
+        # Buat 2 kolom berdampingan
+        col1, col2 = st.columns([3, 2])
 
-    with col1:
-        bar_chart = px.bar(
-            bar_data,
-            x='Tahun Lulus',
-            y='Jumlah',
-            color='Fakultas',
-            barmode='group',
-            title="Jumlah Alumni per Tahun dan Fakultas",
-            color_discrete_sequence=custom_colors_fakultas
-        )
-        bar_chart.update_layout(
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.3,
-                xanchor="center",
-                x=0.5
+        with col1:
+            bar_chart = px.bar(
+                bar_data,
+                x='Tahun Lulus',
+                y='Jumlah',
+                color='Fakultas',
+                barmode='group',
+                title="Jumlah Alumni per Tahun dan Fakultas",
+                color_discrete_sequence=custom_colors_fakultas
             )
-        )
-        st.plotly_chart(bar_chart, use_container_width=True)
+            bar_chart.update_layout(
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.3,
+                    xanchor="center",
+                    x=0.5
+                )
+            )
+            st.plotly_chart(bar_chart, use_container_width=True)
 
-    with col2:
-        donut_chart = px.pie(
-            status_counts,
-            names='Status Kerja',
-            values='Jumlah',
-            hole=0.5,
-            title='Profesi Alumni',
-            color_discrete_sequence=custom_colors_status
-        )
-        st.plotly_chart(donut_chart, use_container_width=True)
+        with col2:
+            donut_chart = px.pie(
+                status_counts,
+                names='Status Kerja',
+                values='Jumlah',
+                hole=0.5,
+                title='Profesi Alumni',
+                color_discrete_sequence=custom_colors_status
+            )
+            st.plotly_chart(donut_chart, use_container_width=True)
 
-    # Tabel Data Alumni full width
-    st.markdown("### Data Alumni")
-    st.dataframe(filtered_df, use_container_width=True)
+        # Tabel Data Alumni full width
+        st.markdown("### Data Alumni")
+        st.dataframe(filtered_df, use_container_width=True)
