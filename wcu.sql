@@ -457,3 +457,24 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Tabel status_kerja
+CREATE TABLE `status_kerja` (
+  `id_status` INT(11) NOT NULL AUTO_INCREMENT,
+  `posisi_kerja` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`id_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Tabel alumni
+CREATE TABLE `alumni` (
+  `id_alumni` INT(11) NOT NULL AUTO_INCREMENT,
+  `nama` VARCHAR(100) NOT NULL,
+  `npm` VARCHAR(20) NOT NULL UNIQUE,
+  `tahun_lulus` DATE NOT NULL,
+  `id_jurusan` INT(11) NOT NULL,
+  `id_status_kerja` INT(11) DEFAULT NULL,
+  `waktu_dapat_kerja` DATE DEFAULT NULL,
+  PRIMARY KEY (`id_alumni`),
+  FOREIGN KEY (`id_jurusan`) REFERENCES `jurusan` (`id_jurusan`),
+  FOREIGN KEY (`id_status_kerja`) REFERENCES `status_kerja` (`id_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
