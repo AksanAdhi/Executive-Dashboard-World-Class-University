@@ -606,23 +606,29 @@ elif selected_menu == "Faculty Staff":
 
 elif selected_menu == "Student Inbound-Outbound":
     # ========== Load Data ==========
+    connection = get_connection()
+
     file_path = 'data_dummy_universitas_final.xlsx'
-    df_program = pd.read_excel(file_path, sheet_name='Program')
-    df_mahasiswa = pd.read_excel(file_path, sheet_name='Mahasiswa')
-    df_jurusan = pd.read_excel(file_path, sheet_name='Jurusan')
-    df_fakultas = pd.read_excel(file_path, sheet_name='Fakultas')
-    df_negara = pd.read_excel(file_path, sheet_name='Negara')
-    df_universitas = pd.read_excel(file_path, sheet_name='Universitas')
+    df_program = pd.read_sql("SELECT * FROM program", connection)
+    df_mahasiswa = pd.read_sql("SELECT * FROM mahasiswa", connection)
+    df_jurusan = pd.read_sql("SELECT * FROM jurusan", connection)
+    df_fakultas = pd.read_sql("SELECT * FROM fakultas", connection)
+    df_negara = pd.read_sql("SELECT * FROM negara", connection)
+    df_universitas = pd.read_sql("SELECT * FROM universitas", connection)
 
     # Gabungkan semua data
     df = df_program.merge(df_mahasiswa, on='mahasiswa_id', how='left')
-    df = df.merge(df_jurusan[['jurusan_id', 'nama_jurusan']], on='jurusan_id', how='left')
-    df = df.merge(df_fakultas[['fakultas_id', 'nama_fakultas']], on='fakultas_id', how='left')
-    df = df.merge(df_negara[['negara_id', 'nama_negara']], on='negara_id', how='left')
+    df = df.merge(df_jurusan[['id_jurusan', 'nama_jurusan']], on='id_jurusan', how='left')
+    df = df.merge(df_fakultas[['id_fakultas', 'nama_fakultas']], on='id_fakultas', how='left')
+    df = df.merge(df_negara[['id_negara', 'nama_negara']], on='id_negara', how='left')
     df = df.merge(df_universitas[['universitas_id', 'nama_universitas']], on='universitas_id', how='left')
 
-    # Format durasi
+    # Konversi durasi ke integer dulu (pastikan error NaN ditangani)
+    df['durasi'] = pd.to_numeric(df['durasi'], errors='coerce').fillna(0).astype(int)
+
+    # Baru apply format durasi_str
     df['durasi_str'] = df['durasi'].apply(lambda x: f"{x} smt" if x <= 4 else f"{x//3} sem")
+
 
 
     # ========== DATA UNTUK CHART ==========
