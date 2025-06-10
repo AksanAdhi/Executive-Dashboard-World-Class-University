@@ -85,10 +85,73 @@ selected_menu = option_menu(
     orientation="horizontal"
 )
 
-# --- MENU LOGIC ---
 if selected_menu == "Home":
-    st.markdown("### Selamat datang di dashboard kolaborasi internasional Universitas Lampung.")
-    st.info("Silakan pilih menu di atas untuk melihat detail kolaborasi.")
+    st.markdown("""
+        <div style="text-align: center; margin-top: -30px;">
+            <h1 style="font-weight: bold;">WCU Analysis</h1>
+            <p style="max-width: 800px; margin: auto; color: #555;">
+                Menggunakan data yang disediakan oleh pihak Universitas, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi. 
+                Indeks Margalef telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional. 
+                Tujuan dari indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("## Explore WCU")
+    col1, col2 = st.columns(2)
+
+    # --- Colab Space Ringkasan
+    with col1:
+        st.markdown("### 🌐 Colab Space")
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT n.nama_negara, COUNT(*) AS jumlah
+            FROM kolaborasi_internasional ki
+            JOIN negara n ON ki.id_negara = n.id_negara
+            GROUP BY n.nama_negara
+            ORDER BY jumlah DESC
+            LIMIT 10
+        """)
+        df_colab = pd.DataFrame(cursor.fetchall())
+        fig_colab = px.bar(df_colab, x='nama_negara', y='jumlah', color='jumlah', title='Top 10 Negara Kolaborasi')
+        st.plotly_chart(fig_colab, use_container_width=True)
+
+    # --- Faculty Staff Ringkasan dari MySQL
+    with col2:
+        st.markdown("### 🧑‍🏫 Faculty Staff")
+        df_staff = pd.read_sql("""
+            SELECT year AS Year, total_paper
+            FROM wcu_data
+        """, conn)
+        staff_summary = df_staff.groupby("Year")["total_paper"].sum().reset_index()
+        fig_staff = px.line(staff_summary, x='Year', y='total_paper', markers=True, title='Total Paper per Tahun')
+        st.plotly_chart(fig_staff, use_container_width=True)
+
+    col3, col4 = st.columns(2)
+
+    # --- Student IO Ringkasan
+    with col3:
+        st.markdown("### 🎓 Student Inbound-Outbound")
+        df_program = pd.read_sql("SELECT tahun, tipe_program FROM program", conn)
+        student_summary = df_program.groupby(['tahun', 'tipe_program']).size().unstack(fill_value=0).reset_index()
+        fig_student = px.bar(student_summary, x='tahun', y=['Inbound', 'Outbound'], barmode='group', title='Inbound vs Outbound per Tahun')
+        st.plotly_chart(fig_student, use_container_width=True)
+
+    # --- Alumni Ringkasan
+    with col4:
+        st.markdown("### 👨‍💼 Alumni")
+        cursor.execute("""
+            SELECT tahun_lulus, COUNT(*) AS jumlah
+            FROM alumni
+            WHERE waktu_dapat_kerja IS NOT NULL
+            GROUP BY tahun_lulus
+            ORDER BY tahun_lulus
+        """)
+        df_alumni = pd.DataFrame(cursor.fetchall())
+        fig_alumni = px.bar(df_alumni, x='tahun_lulus', y='jumlah', title='Jumlah Alumni per Tahun')
+        st.plotly_chart(fig_alumni, use_container_width=True)
+
 
 elif selected_menu == "Colab Space":
     sub_colab = st.selectbox("Pilih Submenu Colab Space", ["Internasional", "Nasional"])
@@ -163,8 +226,15 @@ elif selected_menu == "Colab Space":
             'Malaysia': [3.1390, 101.6869],
             'Thailand': [13.7563, 100.5018],
             'Filipina': [13.41, 122.56],
-            'Indonesia': [-5.4264, 105.2667]
+            'Indonesia': [-5.4264, 105.2667],
+            'Kamboja': [11.5564, 104.9282],
+            'Vietnam': [21.0285, 105.8542],
+            'Timor Leste': [-8.5569, 125.5603],
+            'Laos': [17.9757, 102.6331],
+            'Kanada': [45.4215, -75.6996],
+            'Brunei Darussalam': [4.9031, 114.9398]
         }
+
         df_filtered['lat'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[0])
         df_filtered['lon'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[1])
 
@@ -520,25 +590,33 @@ elif selected_menu == "Colab Space":
 
         
 elif selected_menu == "Faculty Staff":
-    # Load dataset
-    df = pd.read_csv("wcu_data_multiline.csv")
+    # Ambil data dari database
+    conn = get_connection()
+    query = """
+        SELECT 
+            year AS Year,
+            affiliation_name AS `Affiliation Name`,
+            total_paper AS `total paper`,
+            citation_ex_self_citation AS `citation(ex self citation)`,
+            citation_per_faculty AS `Citation per faculty`
+        FROM wcu_data
+    """
+    df = pd.read_sql(query, conn)
+
+    # =========================== Gaya Visual ===========================
     sns.set_style("whitegrid")
 
-    # ===========================
-    # Judul Halaman
-    # ===========================
+    # =========================== Judul Halaman ===========================
     st.markdown("""
     # 🌍 World Class University - Universitas Lampung  
     <div style='font-size:28px; font-weight:bold; margin-top:-10px;'>🧑‍🏫 Faculty Staff</div>
     """, unsafe_allow_html=True)
 
-    # ===========================
-    # Filter UI di bagian atas
-    # ===========================
+    # =========================== Filter UI ===========================
     st.markdown("### 🔍 Filter Data")
 
-    years = sorted(df['Year'].unique())
-    affiliations = sorted(df['Affiliation Name'].unique())
+    years = sorted(df['Year'].dropna().unique())
+    affiliations = sorted(df['Affiliation Name'].dropna().unique())
     dummy_faculties = [
         "Fakultas Teknik", "Fakultas Ekonomi dan Bisnis", "Fakultas Pertanian", 
         "Fakultas Keguruan dan Ilmu Pendidikan", "Fakultas Ilmu Sosial dan Ilmu Politik", 
@@ -553,17 +631,13 @@ elif selected_menu == "Faculty Staff":
     with col3:
         selected_faculty_ui = st.multiselect("🏫 Pilih Fakultas", options=dummy_faculties, default=dummy_faculties)
 
-    # ===========================
-    # Filter DataFrame (Tahun dan Afiliasi saja)
-    # ===========================
+    # =========================== Filter DataFrame ===========================
     filtered_df = df[
-        (df['Year'].isin(selected_years)) & 
+        (df['Year'].isin(selected_years)) &
         (df['Affiliation Name'].isin(selected_affiliations))
     ]
 
-    # ===========================
-    # Validasi dan Visualisasi
-    # ===========================
+    # =========================== Validasi dan Visualisasi ===========================
     if filtered_df.empty:
         st.warning("⚠ Tidak ada data yang sesuai dengan filter yang dipilih.")
     else:
@@ -590,9 +664,7 @@ elif selected_menu == "Faculty Staff":
         plt.tight_layout()
         st.pyplot(fig)
 
-        # ===========================
-        # Tabel Data
-        # ===========================
+        # =========================== Tabel Data ===========================
         def format_table(df_input):
             df_output = df_input.copy()
             df_output['Affiliation Name'] = df_output['Affiliation Name'].mask(df_output['Affiliation Name'].duplicated(), '')
@@ -830,15 +902,15 @@ elif selected_menu == "Alumni":
     cursor.execute("""
         SELECT 
             a.nama, 
-            a.tahun_lulus AS `Tahun Lulus`, 
+            YEAR(a.tahun_lulus) AS `Tahun Lulus`, 
             f.nama_fakultas AS Fakultas,
             p.nama_prodi AS `Program Studi`,
             s.posisi_kerja AS `Status Kerja`,
-            CONCAT(DATEDIFF(MONTH, a.tahun_lulus, a.waktu_dapat_kerja), ' Bulan') AS `Waktu Mendapatkan Kerja`
+            CONCAT(TIMESTAMPDIFF(MONTH, a.tahun_lulus, a.waktu_dapat_kerja), ' Bulan') AS `Waktu Mendapatkan Kerja`
         FROM alumni a
         JOIN program_studi p ON a.program_studi_id = p.id
-        JOIN fakultas f ON p.fakultas_id = f.id
-        LEFT JOIN status_kerja s ON a.status_kerja_id = s.id
+        JOIN fakultas f ON p.fakultas_id = f.id_fakultas
+        LEFT JOIN status_kerja s ON a.status_kerja_id = s.id_status
         WHERE a.waktu_dapat_kerja IS NOT NULL
     """)
     data = cursor.fetchall()
