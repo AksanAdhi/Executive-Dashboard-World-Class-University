@@ -87,8 +87,68 @@ selected_menu = option_menu(
 
 # --- MENU LOGIC ---
 if selected_menu == "Home":
-    st.markdown("### Selamat datang di dashboard kolaborasi internasional Universitas Lampung.")
-    st.info("Silakan pilih menu di atas untuk melihat detail kolaborasi.")
+    st.markdown("""
+        <div style="text-align: center; margin-top: -30px;">
+            <h1 style="font-weight: bold;">WCU Analysis</h1>
+            <p style="max-width: 800px; margin: auto; color: #555;">
+                Menggunakan data yang disediakan oleh pihak Universitas, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi. 
+                Indeks Margalef telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional. 
+                Tujuan dari indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("## Explore WCU")
+    col1, col2 = st.columns(2)
+
+    # --- Colab Space Ringkasan (Bar chart per negara)
+    with col1:
+        st.markdown("### 🌐 Colab Space")
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT n.nama_negara, COUNT(*) AS jumlah
+            FROM kolaborasi_internasional ki
+            JOIN negara n ON ki.id_negara = n.id_negara
+            GROUP BY n.nama_negara
+            ORDER BY jumlah DESC
+            LIMIT 10
+        """)
+        df_colab = pd.DataFrame(cursor.fetchall())
+        fig_colab = px.bar(df_colab, x='nama_negara', y='jumlah', color='jumlah', title='Top 10 Negara Kolaborasi')
+        st.plotly_chart(fig_colab, use_container_width=True)
+
+    # --- Faculty Staff Ringkasan
+    with col2:
+        st.markdown("### 🧑‍🏫 Faculty Staff")
+        df_staff = pd.read_csv("wcu_data_multiline.csv")
+        staff_summary = df_staff.groupby("Year")["total paper"].sum().reset_index()
+        fig_staff = px.line(staff_summary, x='Year', y='total paper', markers=True, title='Total Paper per Tahun')
+        st.plotly_chart(fig_staff, use_container_width=True)
+
+    col3, col4 = st.columns(2)
+
+    # --- Student IO Ringkasan
+    with col3:
+        st.markdown("### 🎓 Student Inbound-Outbound")
+        df_program = pd.read_sql("SELECT tahun, tipe_program FROM program", conn)
+        student_summary = df_program.groupby(['tahun', 'tipe_program']).size().unstack(fill_value=0).reset_index()
+        fig_student = px.bar(student_summary, x='tahun', y=['Inbound', 'Outbound'], barmode='group', title='Inbound vs Outbound per Tahun')
+        st.plotly_chart(fig_student, use_container_width=True)
+
+    # --- Alumni Ringkasan
+    with col4:
+        st.markdown("### 👨‍💼 Alumni")
+        cursor.execute("""
+            SELECT tahun_lulus, COUNT(*) AS jumlah
+            FROM alumni
+            WHERE waktu_dapat_kerja IS NOT NULL
+            GROUP BY tahun_lulus
+            ORDER BY tahun_lulus
+        """)
+        df_alumni = pd.DataFrame(cursor.fetchall())
+        fig_alumni = px.bar(df_alumni, x='tahun_lulus', y='jumlah', title='Jumlah Alumni per Tahun')
+        st.plotly_chart(fig_alumni, use_container_width=True)
 
 elif selected_menu == "Colab Space":
     sub_colab = st.selectbox("Pilih Submenu Colab Space", ["Internasional", "Nasional"])
@@ -163,8 +223,15 @@ elif selected_menu == "Colab Space":
             'Malaysia': [3.1390, 101.6869],
             'Thailand': [13.7563, 100.5018],
             'Filipina': [13.41, 122.56],
-            'Indonesia': [-5.4264, 105.2667]
+            'Indonesia': [-5.4264, 105.2667],
+            'Kamboja': [11.5564, 104.9282],
+            'Vietnam': [21.0285, 105.8542],
+            'Timor Leste': [-8.5569, 125.5603],
+            'Laos': [17.9757, 102.6331],
+            'Kanada': [45.4215, -75.6996],
+            'Brunei Darussalam': [4.9031, 114.9398]
         }
+
         df_filtered['lat'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[0])
         df_filtered['lon'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[1])
 
