@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 10, 2025 at 07:04 PM
--- Server version: 10.4.28-MariaDB-log
--- PHP Version: 8.2.4
+-- Waktu pembuatan: 10 Jun 2025 pada 19.31
+-- Versi server: 10.4.32-MariaDB
+-- Versi PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `wcu 2`
+-- Database: `wcu`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `alumni`
+-- Struktur dari tabel `alumni`
 --
 
 CREATE TABLE `alumni` (
@@ -40,7 +40,7 @@ CREATE TABLE `alumni` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `alumni`
+-- Dumping data untuk tabel `alumni`
 --
 
 INSERT INTO `alumni` (`id_alumni`, `nama`, `npm`, `tahun_lulus`, `id_jurusan`, `id_status_kerja`, `waktu_dapat_kerja`, `program_studi_id`, `status_kerja_id`) VALUES
@@ -148,7 +148,7 @@ INSERT INTO `alumni` (`id_alumni`, `nama`, `npm`, `tahun_lulus`, `id_jurusan`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `fakultas`
+-- Struktur dari tabel `fakultas`
 --
 
 CREATE TABLE `fakultas` (
@@ -157,7 +157,7 @@ CREATE TABLE `fakultas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `fakultas`
+-- Dumping data untuk tabel `fakultas`
 --
 
 INSERT INTO `fakultas` (`id_fakultas`, `nama_fakultas`) VALUES
@@ -173,7 +173,7 @@ INSERT INTO `fakultas` (`id_fakultas`, `nama_fakultas`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `indeks_kolaborasi`
+-- Struktur dari tabel `indeks_kolaborasi`
 --
 
 CREATE TABLE `indeks_kolaborasi` (
@@ -185,7 +185,7 @@ CREATE TABLE `indeks_kolaborasi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `indeks_kolaborasi`
+-- Dumping data untuk tabel `indeks_kolaborasi`
 --
 
 INSERT INTO `indeks_kolaborasi` (`id_indeks`, `tipe`, `L`, `P`, `nilai_indeks`) VALUES
@@ -195,7 +195,7 @@ INSERT INTO `indeks_kolaborasi` (`id_indeks`, `tipe`, `L`, `P`, `nilai_indeks`) 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `jenis_kolaborasi`
+-- Struktur dari tabel `jenis_kolaborasi`
 --
 
 CREATE TABLE `jenis_kolaborasi` (
@@ -204,7 +204,7 @@ CREATE TABLE `jenis_kolaborasi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `jenis_kolaborasi`
+-- Dumping data untuk tabel `jenis_kolaborasi`
 --
 
 INSERT INTO `jenis_kolaborasi` (`id_jenis`, `nama_jenis`) VALUES
@@ -216,7 +216,7 @@ INSERT INTO `jenis_kolaborasi` (`id_jenis`, `nama_jenis`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `jurusan`
+-- Struktur dari tabel `jurusan`
 --
 
 CREATE TABLE `jurusan` (
@@ -226,7 +226,7 @@ CREATE TABLE `jurusan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `jurusan`
+-- Dumping data untuk tabel `jurusan`
 --
 
 INSERT INTO `jurusan` (`id_jurusan`, `nama_jurusan`, `id_fakultas`) VALUES
@@ -307,7 +307,7 @@ INSERT INTO `jurusan` (`id_jurusan`, `nama_jurusan`, `id_fakultas`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `kolaborasi_internasional`
+-- Struktur dari tabel `kolaborasi_internasional`
 --
 
 CREATE TABLE `kolaborasi_internasional` (
@@ -321,7 +321,7 @@ CREATE TABLE `kolaborasi_internasional` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `kolaborasi_internasional`
+-- Dumping data untuk tabel `kolaborasi_internasional`
 --
 
 INSERT INTO `kolaborasi_internasional` (`id_kolaborasi_internasional`, `id_jurusan`, `id_negara`, `id_jenis`, `nama_kolaborasi`, `tanggal_mulai`, `tanggal_selesai`) VALUES
@@ -349,7 +349,7 @@ INSERT INTO `kolaborasi_internasional` (`id_kolaborasi_internasional`, `id_jurus
 -- --------------------------------------------------------
 
 --
--- Table structure for table `kolaborasi_nasional`
+-- Struktur dari tabel `kolaborasi_nasional`
 --
 
 CREATE TABLE `kolaborasi_nasional` (
@@ -363,7 +363,7 @@ CREATE TABLE `kolaborasi_nasional` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `kolaborasi_nasional`
+-- Dumping data untuk tabel `kolaborasi_nasional`
 --
 
 INSERT INTO `kolaborasi_nasional` (`id_kolaborasi_nasional`, `id_jurusan`, `id_provinsi`, `id_jenis`, `nama_kolaborasi`, `tanggal_mulai`, `tanggal_selesai`) VALUES
@@ -391,7 +391,7 @@ INSERT INTO `kolaborasi_nasional` (`id_kolaborasi_nasional`, `id_jurusan`, `id_p
 -- --------------------------------------------------------
 
 --
--- Table structure for table `mahasiswa`
+-- Struktur dari tabel `mahasiswa`
 --
 
 CREATE TABLE `mahasiswa` (
@@ -404,7 +404,7 @@ CREATE TABLE `mahasiswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `mahasiswa`
+-- Dumping data untuk tabel `mahasiswa`
 --
 
 INSERT INTO `mahasiswa` (`mahasiswa_id`, `npm`, `nama`, `semester`, `id_jurusan`, `id_fakultas`) VALUES
@@ -462,7 +462,7 @@ INSERT INTO `mahasiswa` (`mahasiswa_id`, `npm`, `nama`, `semester`, `id_jurusan`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `negara`
+-- Struktur dari tabel `negara`
 --
 
 CREATE TABLE `negara` (
@@ -472,7 +472,7 @@ CREATE TABLE `negara` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `negara`
+-- Dumping data untuk tabel `negara`
 --
 
 INSERT INTO `negara` (`id_negara`, `nama_negara`, `kode_iso`) VALUES
@@ -510,7 +510,7 @@ INSERT INTO `negara` (`id_negara`, `nama_negara`, `kode_iso`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `program`
+-- Struktur dari tabel `program`
 --
 
 CREATE TABLE `program` (
@@ -526,7 +526,7 @@ CREATE TABLE `program` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `program`
+-- Dumping data untuk tabel `program`
 --
 
 INSERT INTO `program` (`program_id`, `nama_program`, `mahasiswa_id`, `tipe_program`, `id_negara`, `universitas_id`, `durasi`, `tahun`, `semester`) VALUES
@@ -584,7 +584,7 @@ INSERT INTO `program` (`program_id`, `nama_program`, `mahasiswa_id`, `tipe_progr
 -- --------------------------------------------------------
 
 --
--- Table structure for table `program_studi`
+-- Struktur dari tabel `program_studi`
 --
 
 CREATE TABLE `program_studi` (
@@ -594,7 +594,7 @@ CREATE TABLE `program_studi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `program_studi`
+-- Dumping data untuk tabel `program_studi`
 --
 
 INSERT INTO `program_studi` (`id`, `nama_prodi`, `fakultas_id`) VALUES
@@ -654,7 +654,7 @@ INSERT INTO `program_studi` (`id`, `nama_prodi`, `fakultas_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `provinsi`
+-- Struktur dari tabel `provinsi`
 --
 
 CREATE TABLE `provinsi` (
@@ -664,7 +664,7 @@ CREATE TABLE `provinsi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `provinsi`
+-- Dumping data untuk tabel `provinsi`
 --
 
 INSERT INTO `provinsi` (`id_provinsi`, `nama_provinsi`, `kode_posisi`) VALUES
@@ -710,7 +710,7 @@ INSERT INTO `provinsi` (`id_provinsi`, `nama_provinsi`, `kode_posisi`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `status_kerja`
+-- Struktur dari tabel `status_kerja`
 --
 
 CREATE TABLE `status_kerja` (
@@ -719,7 +719,7 @@ CREATE TABLE `status_kerja` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `status_kerja`
+-- Dumping data untuk tabel `status_kerja`
 --
 
 INSERT INTO `status_kerja` (`id_status`, `posisi_kerja`) VALUES
@@ -737,7 +737,7 @@ INSERT INTO `status_kerja` (`id_status`, `posisi_kerja`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `universitas`
+-- Struktur dari tabel `universitas`
 --
 
 CREATE TABLE `universitas` (
@@ -746,7 +746,7 @@ CREATE TABLE `universitas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `universitas`
+-- Dumping data untuk tabel `universitas`
 --
 
 INSERT INTO `universitas` (`universitas_id`, `nama_universitas`) VALUES
@@ -784,7 +784,7 @@ INSERT INTO `universitas` (`universitas_id`, `nama_universitas`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `wcu_data`
+-- Struktur dari tabel `wcu_data`
 --
 
 CREATE TABLE `wcu_data` (
@@ -800,7 +800,7 @@ CREATE TABLE `wcu_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `wcu_data`
+-- Dumping data untuk tabel `wcu_data`
 --
 
 INSERT INTO `wcu_data` (`id`, `affiliation_name`, `year`, `total_paper`, `citation_ex_self_citation`, `faculty_staff_international`, `faculty_staff_national`, `fte_staff`, `citation_per_faculty`) VALUES
@@ -850,7 +850,7 @@ INSERT INTO `wcu_data` (`id`, `affiliation_name`, `year`, `total_paper`, `citati
 --
 
 --
--- Indexes for table `alumni`
+-- Indeks untuk tabel `alumni`
 --
 ALTER TABLE `alumni`
   ADD PRIMARY KEY (`id_alumni`),
@@ -861,32 +861,32 @@ ALTER TABLE `alumni`
   ADD KEY `fk_status_kerja` (`status_kerja_id`);
 
 --
--- Indexes for table `fakultas`
+-- Indeks untuk tabel `fakultas`
 --
 ALTER TABLE `fakultas`
   ADD PRIMARY KEY (`id_fakultas`);
 
 --
--- Indexes for table `indeks_kolaborasi`
+-- Indeks untuk tabel `indeks_kolaborasi`
 --
 ALTER TABLE `indeks_kolaborasi`
   ADD PRIMARY KEY (`id_indeks`);
 
 --
--- Indexes for table `jenis_kolaborasi`
+-- Indeks untuk tabel `jenis_kolaborasi`
 --
 ALTER TABLE `jenis_kolaborasi`
   ADD PRIMARY KEY (`id_jenis`);
 
 --
--- Indexes for table `jurusan`
+-- Indeks untuk tabel `jurusan`
 --
 ALTER TABLE `jurusan`
   ADD PRIMARY KEY (`id_jurusan`),
   ADD KEY `id_fakultas` (`id_fakultas`);
 
 --
--- Indexes for table `kolaborasi_internasional`
+-- Indeks untuk tabel `kolaborasi_internasional`
 --
 ALTER TABLE `kolaborasi_internasional`
   ADD PRIMARY KEY (`id_kolaborasi_internasional`),
@@ -895,7 +895,7 @@ ALTER TABLE `kolaborasi_internasional`
   ADD KEY `id_jenis` (`id_jenis`);
 
 --
--- Indexes for table `kolaborasi_nasional`
+-- Indeks untuk tabel `kolaborasi_nasional`
 --
 ALTER TABLE `kolaborasi_nasional`
   ADD PRIMARY KEY (`id_kolaborasi_nasional`),
@@ -904,7 +904,7 @@ ALTER TABLE `kolaborasi_nasional`
   ADD KEY `id_jenis` (`id_jenis`);
 
 --
--- Indexes for table `mahasiswa`
+-- Indeks untuk tabel `mahasiswa`
 --
 ALTER TABLE `mahasiswa`
   ADD PRIMARY KEY (`mahasiswa_id`),
@@ -913,13 +913,13 @@ ALTER TABLE `mahasiswa`
   ADD KEY `id_fakultas` (`id_fakultas`);
 
 --
--- Indexes for table `negara`
+-- Indeks untuk tabel `negara`
 --
 ALTER TABLE `negara`
   ADD PRIMARY KEY (`id_negara`);
 
 --
--- Indexes for table `program`
+-- Indeks untuk tabel `program`
 --
 ALTER TABLE `program`
   ADD PRIMARY KEY (`program_id`),
@@ -928,88 +928,88 @@ ALTER TABLE `program`
   ADD KEY `universitas_id` (`universitas_id`);
 
 --
--- Indexes for table `program_studi`
+-- Indeks untuk tabel `program_studi`
 --
 ALTER TABLE `program_studi`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fakultas_id` (`fakultas_id`);
 
 --
--- Indexes for table `provinsi`
+-- Indeks untuk tabel `provinsi`
 --
 ALTER TABLE `provinsi`
   ADD PRIMARY KEY (`id_provinsi`);
 
 --
--- Indexes for table `status_kerja`
+-- Indeks untuk tabel `status_kerja`
 --
 ALTER TABLE `status_kerja`
   ADD PRIMARY KEY (`id_status`);
 
 --
--- Indexes for table `universitas`
+-- Indeks untuk tabel `universitas`
 --
 ALTER TABLE `universitas`
   ADD PRIMARY KEY (`universitas_id`);
 
 --
--- Indexes for table `wcu_data`
+-- Indeks untuk tabel `wcu_data`
 --
 ALTER TABLE `wcu_data`
   ADD PRIMARY KEY (`id`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT untuk tabel yang dibuang
 --
 
 --
--- AUTO_INCREMENT for table `alumni`
+-- AUTO_INCREMENT untuk tabel `alumni`
 --
 ALTER TABLE `alumni`
   MODIFY `id_alumni` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
--- AUTO_INCREMENT for table `mahasiswa`
+-- AUTO_INCREMENT untuk tabel `mahasiswa`
 --
 ALTER TABLE `mahasiswa`
   MODIFY `mahasiswa_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `program`
+-- AUTO_INCREMENT untuk tabel `program`
 --
 ALTER TABLE `program`
   MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `program_studi`
+-- AUTO_INCREMENT untuk tabel `program_studi`
 --
 ALTER TABLE `program_studi`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
--- AUTO_INCREMENT for table `status_kerja`
+-- AUTO_INCREMENT untuk tabel `status_kerja`
 --
 ALTER TABLE `status_kerja`
   MODIFY `id_status` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
--- AUTO_INCREMENT for table `universitas`
+-- AUTO_INCREMENT untuk tabel `universitas`
 --
 ALTER TABLE `universitas`
   MODIFY `universitas_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
--- AUTO_INCREMENT for table `wcu_data`
+-- AUTO_INCREMENT untuk tabel `wcu_data`
 --
 ALTER TABLE `wcu_data`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- Constraints for dumped tables
+-- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
 
 --
--- Constraints for table `alumni`
+-- Ketidakleluasaan untuk tabel `alumni`
 --
 ALTER TABLE `alumni`
   ADD CONSTRAINT `alumni_ibfk_1` FOREIGN KEY (`id_jurusan`) REFERENCES `jurusan` (`id_jurusan`),
@@ -1018,20 +1018,20 @@ ALTER TABLE `alumni`
   ADD CONSTRAINT `fk_status_kerja` FOREIGN KEY (`status_kerja_id`) REFERENCES `status_kerja` (`id_status`);
 
 --
--- Constraints for table `jurusan`
+-- Ketidakleluasaan untuk tabel `jurusan`
 --
 ALTER TABLE `jurusan`
   ADD CONSTRAINT `jurusan_ibfk_1` FOREIGN KEY (`id_fakultas`) REFERENCES `fakultas` (`id_fakultas`);
 
 --
--- Constraints for table `mahasiswa`
+-- Ketidakleluasaan untuk tabel `mahasiswa`
 --
 ALTER TABLE `mahasiswa`
   ADD CONSTRAINT `mahasiswa_ibfk_1` FOREIGN KEY (`id_jurusan`) REFERENCES `jurusan` (`id_jurusan`),
   ADD CONSTRAINT `mahasiswa_ibfk_2` FOREIGN KEY (`id_fakultas`) REFERENCES `fakultas` (`id_fakultas`);
 
 --
--- Constraints for table `program`
+-- Ketidakleluasaan untuk tabel `program`
 --
 ALTER TABLE `program`
   ADD CONSTRAINT `program_ibfk_1` FOREIGN KEY (`mahasiswa_id`) REFERENCES `mahasiswa` (`mahasiswa_id`),
@@ -1039,7 +1039,7 @@ ALTER TABLE `program`
   ADD CONSTRAINT `program_ibfk_3` FOREIGN KEY (`universitas_id`) REFERENCES `universitas` (`universitas_id`);
 
 --
--- Constraints for table `program_studi`
+-- Ketidakleluasaan untuk tabel `program_studi`
 --
 ALTER TABLE `program_studi`
   ADD CONSTRAINT `program_studi_ibfk_1` FOREIGN KEY (`fakultas_id`) REFERENCES `fakultas` (`id_fakultas`);
