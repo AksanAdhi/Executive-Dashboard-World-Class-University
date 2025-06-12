@@ -9,7 +9,7 @@ from db import get_connection
 
 
 # --- PAGE CONFIG ---
-st.set_page_config(layout="wide", page_title="International Collaboration", page_icon="🌍")
+st.set_page_config(layout="wide", page_title="WCU Universitas Lampung", page_icon="🌍")
 
 # --- CSS ---
 st.markdown("""
@@ -77,187 +77,142 @@ with col2:
         </div>
     """, unsafe_allow_html=True)
 
+    # --- MENU ---
+if 'selected_menu' not in st.session_state:
+    st.session_state.selected_menu = "Home"
+
+if 'page' in st.session_state:
+    if st.session_state.page == 'colab_space':
+        st.session_state.selected_menu = "Colab Space"
+    elif st.session_state.page == 'faculty staff':
+        st.session_state.selected_menu = "Faculty Staff"
+    elif st.session_state.page == 'student inbound-outbound':
+        st.session_state.selected_menu = "Student Inbound-Outbound"
+    elif st.session_state.page == 'alumni':
+        st.session_state.selected_menu = "Alumni"
+    del st.session_state.page
+
 # --- NAVBAR ---
 selected_menu = option_menu(
     menu_title=None,
     options=["Home", "Colab Space", "Faculty Staff", "Student Inbound-Outbound", "Alumni"],
     icons=["house", "layers", "people", "arrows-angle-expand", "person-bounding-box"],
-    orientation="horizontal"
+    orientation="horizontal",
+    default_index=["Home", "Colab Space", "Faculty Staff", "Student Inbound-Outbound", "Alumni"].index(st.session_state.selected_menu)
 )
+
+# Update session_state jika user mengklik langsung navbar
+st.session_state.selected_menu = selected_menu
+
 
 if selected_menu == "Home":
     # -------------------------- HEADER WCU ANALYSIS --------------------------
-    st.markdown("""
-        <style>
-            .home-banner {
-                background-color: #e6ebf7;
-                padding: 2rem 1rem;
-                border-radius: 10px;
-                margin-bottom: 30px;
-            }
-            .card-box {
-                background-color: transparent;
-                border: 1px solid #ccc;
-                border-radius: 12px;
-                padding: 1.2rem;
-                margin-bottom: 20px;
-            }
-            .card-title {
-                font-size: 18px;
-                font-weight: 700;
-                color: #1E4EB3;
-                margin-bottom: 8px;
-            }
-            .card-desc {
-                font-size: 14px;
-                color: #444;
-                margin-bottom: 10px;
-            }
-        </style>
 
-        <div class="home-banner">
-            <div style="display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                <img src='https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/640px-Equirectangular_projection_SW.jpg' width='100%' style="max-height:200px; object-fit: cover; border-radius: 10px;"/>
-                <h1 style="margin-top: 20px; font-size: 36px; font-weight: bold;">WCU Analysis</h1>
-                <p style="max-width: 800px; text-align: center; font-size: 15px; color: #333;">
-                    Menggunakan data yang disediakan oleh pihak Universitas, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. 
-                    Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih untuk lembaga tertentu. 
-                    Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.
-                </p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+# Section: WCU Analysis Banner
+    col_map, col_text = st.columns([1, 2])
+    with col_map:
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/640px-Equirectangular_projection_SW.jpg", use_container_width=True)
 
-    # -------------------------- DATA PREP --------------------------
+    with col_text:
+        st.markdown("""
+            <h2 style='margin-top:0'>WCU Analysis</h2>
+            <p style='font-size:15px; text-align:justify'>
+            Menggunakan data yang disediakan oleh pihak Universitas, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. 
+            Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih untuk lembaga tertentu. 
+            Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.
+            </p>
+                    
+                    
+        """, unsafe_allow_html=True)
+
+    st.markdown("## Explore WCU")
+
+    # --- Database Connection ---
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
+    # --- Grafik Colab Space ---
     cursor.execute("""
-        SELECT n.nama_negara, COUNT(*) AS jumlah
+        SELECT n.nama_negara AS nama, COUNT(*) AS jumlah, 'Internasional' AS jenis
         FROM kolaborasi_internasional ki
         JOIN negara n ON ki.id_negara = n.id_negara
-        GROUP BY n.nama_negara
-        ORDER BY jumlah DESC
-        LIMIT 10
+        GROUP BY nama ORDER BY jumlah DESC LIMIT 5
     """)
-    df_colab = pd.DataFrame(cursor.fetchall())
-    fig_colab = px.bar(df_colab, x='nama_negara', y='jumlah', text='jumlah', color='jumlah',
-                       labels={'nama_negara': 'Negara', 'jumlah': 'Kolaborasi'},
-                       color_continuous_scale='blues')
-    fig_colab.update_traces(textposition='outside')
-    fig_colab.update_layout(margin=dict(t=20))
+    df_internasional = pd.DataFrame(cursor.fetchall())
 
+    cursor.execute("""
+        SELECT p.nama_provinsi AS nama, COUNT(*) AS jumlah, 'Nasional' AS jenis
+        FROM kolaborasi_nasional kn
+        JOIN provinsi p ON kn.id_provinsi = p.id_provinsi
+        GROUP BY nama ORDER BY jumlah DESC LIMIT 5
+    """)
+    df_nasional = pd.DataFrame(cursor.fetchall())
+
+    df_colab_all = pd.concat([df_internasional, df_nasional], ignore_index=True)
+    fig_colab = px.bar(df_colab_all, x='nama', y='jumlah', color='jenis', barmode='group',
+                        labels={'nama': 'Wilayah', 'jumlah': 'Kolaborasi'},
+                        color_discrete_map={'Internasional': '#1E4EB3', 'Nasional': '#F28E2B'},
+                        height=300 )
+
+# Grafik Faculty Staff
+    df_staff = pd.read_sql("SELECT year AS Year, total_paper FROM wcu_data", conn)
+    staff_summary = df_staff.groupby("Year")["total_paper"].sum().reset_index()
+    fig_staff = px.line(staff_summary, x='Year', y='total_paper', markers=True, height=300)
+    fig_staff.update_layout(margin=dict(t=20))
+
+# --- Student Inbound Outboun ---
     df_program = pd.read_sql("SELECT tahun, tipe_program FROM program", conn)
     student_summary = df_program.groupby(['tahun', 'tipe_program']).size().unstack(fill_value=0).reset_index()
     fig_student = px.bar(student_summary, x='tahun', y=['Inbound', 'Outbound'], barmode='group',
-                         color_discrete_sequence=['#1E4EB3', '#F28E2B'])
+                        color_discrete_sequence=['#1E4EB3', '#F28E2B'], height=300)
     fig_student.update_layout(margin=dict(t=20))
 
-    df_staff = pd.read_sql("SELECT year AS Year, total_paper FROM wcu_data", conn)
-    staff_summary = df_staff.groupby("Year")["total_paper"].sum().reset_index()
-    fig_staff = px.line(staff_summary, x='Year', y='total_paper', markers=True)
-    fig_staff.update_layout(margin=dict(t=20))
-
+    # --- Grafik Alumni ---
     cursor.execute("""
         SELECT YEAR(tahun_lulus) AS tahun, COUNT(*) AS jumlah
         FROM alumni
         WHERE waktu_dapat_kerja IS NOT NULL
-        GROUP BY tahun
-        ORDER BY tahun
+        GROUP BY tahun ORDER BY tahun
     """)
     df_alumni = pd.DataFrame(cursor.fetchall())
     fig_alumni = px.bar(df_alumni, x='tahun', y='jumlah', color='jumlah',
-                        labels={'tahun': 'Tahun Lulus', 'jumlah': 'Jumlah Alumni'},
-                        color_continuous_scale='blues')
-    fig_alumni.update_layout(margin=dict(t=20))
+                        labels={'tahun': 'Tahun', 'jumlah': 'Jumlah Alumni'},
+                        color_continuous_scale='blues', height=300)
 
-    # -------------------------- LAYOUT 2x2 --------------------------
-    st.markdown("## Explore WCU")
+    # --- Layout Explore Cards ---
+    col1, col2, col3, col4 = st.columns(4)
 
-    col1, col2 = st.columns(2)
-# --- Colab Space Ringkasan (revisi)
     with col1:
-        st.markdown("""
-        <div class='card-box'>
-            <div class='card-title'>🌐 Colab Space</div>
-            <div class='card-desc'>Menampilkan 5 provinsi dan 5 negara dengan jumlah kolaborasi tertinggi, baik nasional maupun internasional.</div>
-        """, unsafe_allow_html=True)
-
-        # --- Query Kolaborasi Internasional (Top 5 Negara)
-        cursor.execute("""
-            SELECT n.nama_negara AS nama, COUNT(*) AS jumlah, 'Internasional' AS jenis
-            FROM kolaborasi_internasional ki
-            JOIN negara n ON ki.id_negara = n.id_negara
-            GROUP BY nama
-            ORDER BY jumlah DESC
-            LIMIT 5
-        """)
-        df_internasional = pd.DataFrame(cursor.fetchall())
-
-        # --- Query Kolaborasi Nasional (Top 5 Provinsi)
-        cursor.execute("""
-            SELECT p.nama_provinsi AS nama, COUNT(*) AS jumlah, 'Nasional' AS jenis
-            FROM kolaborasi_nasional kn
-            JOIN provinsi p ON kn.id_provinsi = p.id_provinsi
-            GROUP BY nama
-            ORDER BY jumlah DESC
-            LIMIT 5
-        """)
-        df_nasional = pd.DataFrame(cursor.fetchall())
-
-        # Gabungkan keduanya
-        df_colab_all = pd.concat([df_internasional, df_nasional], ignore_index=True)
-
-        # Buat bar chart
-        fig_colab_mix = px.bar(
-            df_colab_all,
-            x='nama',
-            y='jumlah',
-            color='jenis',
-            barmode='group',
-            labels={'nama': 'Wilayah', 'jumlah': 'Jumlah Kolaborasi'},
-            color_discrete_map={
-                'Internasional': '#1E4EB3',
-                'Nasional': '#F28E2B'
-            }
-        )
-        fig_colab_mix.update_layout(margin=dict(t=20))
-
-        st.plotly_chart(fig_colab_mix, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
+        st.markdown("#### 📊 Colab Space")
+        st.plotly_chart(fig_colab, use_container_width=True)
+        if st.button("Explore", key="explore_colab"):
+            st.session_state.page = 'colab_space'
+            st.rerun()
 
     with col2:
-        st.markdown("""
-        <div class='card-box'>
-            <div class='card-title'>🎓 Student Inbound-Outbound</div>
-            <div class='card-desc'>Menampilkan perbandingan jumlah mahasiswa inbound dan outbound per tahun dalam program internasional.</div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(fig_student, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    col3, col4 = st.columns(2)
-    with col3:
-        st.markdown("""
-        <div class='card-box'>
-            <div class='card-title'>🧑‍🏫 Faculty Staff</div>
-            <div class='card-desc'>Jumlah publikasi dosen per tahun sebagai representasi kontribusi akademik terhadap jaringan riset internasional.</div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### 👨‍🏫 Faculty Staff")
         st.plotly_chart(fig_staff, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("Explore", key="explore_staff"):
+            st.session_state.page = 'faculty staff'
+            st.rerun()
+
+    
+    with col3:
+        st.markdown("#### 🌏 Student Inbound")
+        st.plotly_chart(fig_student, use_container_width=True)
+        if st.button("Explore", key="explore_student"):
+            st.session_state.page = 'student inbound-outbound'
+            st.rerun()
 
     with col4:
-        st.markdown("""
-        <div class='card-box'>
-            <div class='card-title'>👨‍🎓 Alumni per Tahun</div>
-            <div class='card-desc'>Distribusi alumni yang telah berhasil memperoleh pekerjaan setelah lulus, ditampilkan per tahun kelulusan.</div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### 🎓 Alumni")
         st.plotly_chart(fig_alumni, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("Explore", key="explore_alumni"):
+            st.session_state.page = 'alumni'
+            st.rerun()
 
 
-
-
+# Mulai Kodingan Per Dashboard
 
 elif selected_menu == "Colab Space":
     sub_colab = st.selectbox("Pilih Submenu Colab Space", ["Internasional", "Nasional"])
@@ -998,7 +953,7 @@ elif selected_menu == "Alumni":
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Ambil data dari database alumni
+    # Ambil data dari database alumni.
     cursor.execute("""
         SELECT 
             a.nama, 
