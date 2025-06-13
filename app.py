@@ -800,11 +800,20 @@ elif selected_menu == "Student Inbound-Outbound":
             options=["Semua"] + sorted(df['nama_fakultas'].dropna().unique().tolist())
         )
 
+    # Sesuaikan pilihan jurusan berdasarkan fakultas
+    if selected_fakultas == "Semua":
+        jurusan_options = sorted(df['nama_jurusan'].dropna().unique().tolist())
+    else:
+        jurusan_options = sorted(
+            df[df['nama_fakultas'] == selected_fakultas]['nama_jurusan'].dropna().unique().tolist()
+        )
+
     with col_f3:
         selected_jurusan = st.selectbox(
             "Pilih Jurusan", 
-            options=["Semua"] + sorted(df['nama_jurusan'].dropna().unique().tolist())
+            options=["Semua"] + jurusan_options
         )
+
 
     # Terapkan filter
     filtered_df = df[['nama', 'npm', 'nama_negara', 'nama_universitas',
@@ -850,25 +859,29 @@ elif selected_menu == "Student Inbound-Outbound":
 
     with col1:
         st.markdown("<h5 style='text-align: center; font-size:18px; margin-top:50px;'>Jumlah Mahasiswa Outbound/Inbound per Tahun</h5>", unsafe_allow_html=True)
-        fig1, ax1 = plt.subplots()
-        if not count_by_year_type.empty:
-            count_by_year_type.plot(kind='bar', ax=ax1, color=['cornflowerblue', 'salmon'])
-            ax1.set_ylabel("Jumlah Mahasiswa")
-            ax1.set_xlabel("Tahun")
-            ax1.set_title("Outbound vs Inbound")
-            ax1.legend(title='Tipe Program')
-        else:
-            ax1.text(0.5, 0.5, 'Tidak ada data untuk ditampilkan', ha='center', va='center', fontsize=12)
-            ax1.axis('off')
-        st.pyplot(fig1)
+        data_bar = count_by_year_type.reset_index().melt(id_vars='tahun', var_name='Tipe Program', value_name='Jumlah')
+
+        fig1 = px.bar(
+            data_bar, 
+            x="tahun", 
+            y="Jumlah", 
+            color="Tipe Program", 
+            barmode="group",
+            color_discrete_map={"Inbound": "cornflowerblue", "Outbound": "salmon"}
+        )
+
+        st.plotly_chart(fig1, use_container_width=True)
 
 
     with col2:
         st.markdown("<h5 style='text-align: center; font-size:18px; margin-top:50px;'>Negara Asal Inbound</h5>", unsafe_allow_html=True)
-        fig2, ax2 = plt.subplots()
-        inbound_countries.plot(kind='pie', autopct='%1.1f%%', ax=ax2, startangle=90)
-        ax2.set_ylabel('')
-        st.pyplot(fig2)
+        fig2 = px.pie(
+            names=inbound_countries.index,
+            values=inbound_countries.values,
+            hole=0.3
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+
 
 
     # ---------- BARIS BAWAH: Tabel ----------
@@ -903,48 +916,49 @@ elif selected_menu == "Student Inbound-Outbound":
 
     with col6:
         st.markdown("<h5 style='text-align: center; font-size:18px;'>Rasio Dosen dan Mahasiswa</h5>", unsafe_allow_html=True)
-        fig3, ax3 = plt.subplots(figsize=(4, 4))
-        wedges, texts, autotexts = ax3.pie(
-            [rasio_dosen, rasio_mahasiswa],
-            colors=["yellow", "green"],
-            startangle=90,
-            wedgeprops=dict(width=0.5),
-            autopct='%1.0f%%'
+
+        # Data
+        labels_rasio = ["Dosen", "Mahasiswa"]
+        values_rasio = [rasio_dosen, rasio_mahasiswa]
+
+        # Plotly Pie Chart
+        fig3 = px.pie(
+            names=labels_rasio,
+            values=values_rasio,
+            hole=0.4,
+            color_discrete_sequence=["yellow", "green"]
         )
-        ax3.set(aspect="equal")
-        ax3.text(0, 0, f"{rasio_dosen} : {rasio_mahasiswa}", ha='center', va='center', fontsize=12)
-        ax3.legend(['Dosen', 'Mahasiswa'], loc='center left', bbox_to_anchor=(1, 0.5))
-        st.pyplot(fig3)
+        fig3.update_traces(textinfo='percent+label')
+        fig3.update_layout(
+            showlegend=True,
+            annotations=[dict(text=f"{rasio_dosen}:{rasio_mahasiswa}", x=0.5, y=0.5, font_size=14, showarrow=False)],
+            margin=dict(t=10, b=10, l=10, r=10)
+        )
+        st.plotly_chart(fig3, use_container_width=True)
 
     with col7:
         st.markdown("<h5 style='text-align: center; font-size:18px;'>Presentase Mahasiswa I/O</h5>", unsafe_allow_html=True)
-        fig4, ax4 = plt.subplots()
+
         total_io = total_inbound + total_outbound
 
         if total_io > 0:
-            inbound_pct = round((total_inbound / total_io) * 100, 2)
-            outbound_pct = round((total_outbound / total_io) * 100, 2)
-        else:
-            inbound_pct = 0
-            outbound_pct = 0
+            labels_io = ["Inbound", "Outbound"]
+            values_io = [total_inbound, total_outbound]
 
-        # Saat plotting
-        if total_io > 0:
-            wedges, texts, autotexts = ax4.pie(
-                [inbound_pct, outbound_pct],
-                labels=["Inbound", "Outbound"],
-                colors=["yellow", "green"],
-                startangle=90,
-                autopct='%1.0f%%',
-                wedgeprops=dict(width=0.5)
+            fig4 = px.pie(
+                names=labels_io,
+                values=values_io,
+                hole=0.4,
+                color_discrete_sequence=["yellow", "green"]
             )
+            fig4.update_traces(textinfo='percent+label')
+            fig4.update_layout(
+                showlegend=True,
+                margin=dict(t=10, b=10, l=10, r=10)
+            )
+            st.plotly_chart(fig4, use_container_width=True)
         else:
-            ax4.text(0.5, 0.5, "Tidak ada data", ha='center', va='center', fontsize=12)
-            ax4.axis('off')
-
-        ax4.set(aspect="equal")
-        ax4.legend(["Inbound", "Outbound"], loc='center left', bbox_to_anchor=(1, 0.5))
-        st.pyplot(fig4)
+            st.markdown("<div style='text-align:center; font-size:16px;'>Tidak ada data untuk ditampilkan</div>", unsafe_allow_html=True)
 
 elif selected_menu == "Alumni":
     st.markdown('<div class="title-box">🎓 Alumni</div>', unsafe_allow_html=True)
