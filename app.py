@@ -293,7 +293,7 @@ elif selected_menu == "Colab Space":
             'Timor Leste': [-8.5569, 125.5603],
             'Laos': [17.9757, 102.6331],
             'Kanada': [45.4215, -75.6996],
-            'Brunei Darussalam': [4.9031, 114.9398]
+            'Brunei Darussalam': [4.9031, 114.9398],
         }
 
         df_filtered['lat'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[0])
@@ -412,8 +412,8 @@ elif selected_menu == "Colab Space":
 
         fig = px.bar(melted, x="nama_negara", y="Jumlah", color="Jenis", barmode="stack", height=500,
                     color_discrete_map={
-                        "Dosen Tamu": "#FFF1D3",
-                        "Akademik": "#F1DEBB",
+                        "Dosen Tamu": "#F1DEBB",
+                        "Akademik": "#FFF1D3",
                         "Riset dan Publikasi": "#E7D280",
                         "Seminar dan Workshop": "#E3BE45"
                     })
@@ -561,6 +561,27 @@ elif selected_menu == "Colab Space":
             'Sulawesi Tengah': [-0.893, 119.894],
             'Sulawesi Selatan': [-5.135, 119.412],
             'Sulawesi Tenggara': [-4.160, 122.163],
+            'Aceh': [5.5502, 95.3160],
+            'Sumatera Utara': [3.5952, 98.6722],
+            'Sumatera Barat': [-0.9471, 100.4172],
+            'Riau': [0.5071, 101.4478],
+            'Kepulauan Riau': [3.9457, 108.1429],
+            'Jambi': [-1.4852, 102.4381],
+            'Bengkulu': [-3.8004, 102.2655],
+            'Sumatera Selatan': [-3.3194, 104.9145],
+            'Kepulauan Bangka Belitung': [-2.7411, 106.4406],  # atau 'Bangka Belitung'
+            'Lampung': [-5.398, 105.266],
+            'Papua Barat': [-1.3361, 133.1747],
+            'Papua Pegunungan': [-4.2356, 138.5967],
+            'Papua Selatan': [-7.7706, 139.7271],
+            'Papua Tengah': [-3.9873, 137.1876],
+            'Papua Barat Daya': [-1.2559, 131.4184],
+            'Maluku': [-3.2385, 130.1453],
+            'Maluku Utara': [1.5700, 127.8088],
+            'Gorontalo': [0.6999, 122.4467],
+            'Papua': [-4.2699, 138.0804],
+            'Bangka Belitung': [-2.7411, 106.4406],
+            'Sulawesi Barat': [-2.5164, 119.3914],
         }
 
         df_filtered['lat'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[0])
@@ -619,8 +640,8 @@ elif selected_menu == "Colab Space":
         melted = chart_df.melt(id_vars="nama_provinsi", var_name="Jenis", value_name="Jumlah")
         fig = px.bar(melted, x="nama_provinsi", y="Jumlah", color="Jenis", barmode="stack", height=500,
                     color_discrete_map={
-                        "Dosen Tamu": "#FAF2DC",
-                        "Akademik": "#D0C7A2",
+                        "Dosen Tamu": "#D0C7A2",
+                        "Akademik": "#FAF2DC",
                         "Riset dan Publikasi": "#99BE8F",
                         "Seminar dan Workshop": "#76A98D"
                     })
