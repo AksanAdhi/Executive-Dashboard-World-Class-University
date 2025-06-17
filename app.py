@@ -9,7 +9,7 @@ from db import get_connection
 
 
 # --- PAGE CONFIG ---
-st.set_page_config(layout="wide", page_title="International Collaboration", page_icon="🌍")
+st.set_page_config(layout="wide", page_title="WCU Universitas Lampung", page_icon="🌍")
 
 # --- CSS ---
 st.markdown("""
@@ -77,18 +77,142 @@ with col2:
         </div>
     """, unsafe_allow_html=True)
 
+    # --- MENU ---
+if 'selected_menu' not in st.session_state:
+    st.session_state.selected_menu = "Home"
+
+if 'page' in st.session_state:
+    if st.session_state.page == 'colab_space':
+        st.session_state.selected_menu = "Colab Space"
+    elif st.session_state.page == 'faculty staff':
+        st.session_state.selected_menu = "Faculty Staff"
+    elif st.session_state.page == 'student inbound-outbound':
+        st.session_state.selected_menu = "Student Inbound-Outbound"
+    elif st.session_state.page == 'alumni':
+        st.session_state.selected_menu = "Alumni"
+    del st.session_state.page
+
 # --- NAVBAR ---
 selected_menu = option_menu(
     menu_title=None,
     options=["Home", "Colab Space", "Faculty Staff", "Student Inbound-Outbound", "Alumni"],
     icons=["house", "layers", "people", "arrows-angle-expand", "person-bounding-box"],
-    orientation="horizontal"
+    orientation="horizontal",
+    default_index=["Home", "Colab Space", "Faculty Staff", "Student Inbound-Outbound", "Alumni"].index(st.session_state.selected_menu)
 )
 
-# --- MENU LOGIC ---
+# Update session_state jika user mengklik langsung navbar
+st.session_state.selected_menu = selected_menu
+
+
 if selected_menu == "Home":
-    st.markdown("### Selamat datang di dashboard kolaborasi internasional Universitas Lampung.")
-    st.info("Silakan pilih menu di atas untuk melihat detail kolaborasi.")
+    # -------------------------- HEADER WCU ANALYSIS --------------------------
+
+# Section: WCU Analysis Banner
+    col_map, col_text = st.columns([1, 2])
+    with col_map:
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/640px-Equirectangular_projection_SW.jpg", use_container_width=True)
+
+    with col_text:
+        st.markdown("""
+            <h2 style='margin-top:0'>WCU Analysis</h2>
+            <p style='font-size:15px; text-align:justify'>
+            Menggunakan data yang disediakan oleh pihak Universitas, indikator ini menilai tingkat keterbukaan internasional dalam hal kolaborasi untuk setiap lembaga yang dievaluasi. 
+            Indeks Margalef, yang banyak digunakan dalam ilmu lingkungan, telah diadaptasi untuk memperkirakan kekayaan mitra penelitian internasional yang dipilih untuk lembaga tertentu. 
+            Tujuan di balik indikator ini adalah untuk mengukur keragaman kemitraan penelitian internasional.
+            </p>
+                    
+                    
+        """, unsafe_allow_html=True)
+
+    st.markdown("## Explore WCU")
+
+    # --- Database Connection ---
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # --- Grafik Colab Space ---
+    cursor.execute("""
+        SELECT n.nama_negara AS nama, COUNT(*) AS jumlah, 'Internasional' AS jenis
+        FROM kolaborasi_internasional ki
+        JOIN negara n ON ki.id_negara = n.id_negara
+        GROUP BY nama ORDER BY jumlah DESC LIMIT 5
+    """)
+    df_internasional = pd.DataFrame(cursor.fetchall())
+
+    cursor.execute("""
+        SELECT p.nama_provinsi AS nama, COUNT(*) AS jumlah, 'Nasional' AS jenis
+        FROM kolaborasi_nasional kn
+        JOIN provinsi p ON kn.id_provinsi = p.id_provinsi
+        GROUP BY nama ORDER BY jumlah DESC LIMIT 5
+    """)
+    df_nasional = pd.DataFrame(cursor.fetchall())
+
+    df_colab_all = pd.concat([df_internasional, df_nasional], ignore_index=True)
+    fig_colab = px.bar(df_colab_all, x='nama', y='jumlah', color='jenis', barmode='group',
+                        labels={'nama': 'Wilayah', 'jumlah': 'Kolaborasi'},
+                        color_discrete_map={'Internasional': '#1E4EB3', 'Nasional': '#F28E2B'},
+                        height=300 )
+
+# Grafik Faculty Staff
+    df_staff = pd.read_sql("SELECT year AS Year, total_paper FROM wcu_data", conn)
+    staff_summary = df_staff.groupby("Year")["total_paper"].sum().reset_index()
+    fig_staff = px.line(staff_summary, x='Year', y='total_paper', markers=True, height=300)
+    fig_staff.update_layout(margin=dict(t=20))
+
+# --- Student Inbound Outboun ---
+    df_program = pd.read_sql("SELECT tahun, tipe_program FROM program", conn)
+    student_summary = df_program.groupby(['tahun', 'tipe_program']).size().unstack(fill_value=0).reset_index()
+    fig_student = px.bar(student_summary, x='tahun', y=['Inbound', 'Outbound'], barmode='group',
+                        color_discrete_sequence=['#1E4EB3', '#F28E2B'], height=300)
+    fig_student.update_layout(margin=dict(t=20))
+
+    # --- Grafik Alumni ---
+    cursor.execute("""
+        SELECT YEAR(tahun_lulus) AS tahun, COUNT(*) AS jumlah
+        FROM alumni
+        WHERE waktu_dapat_kerja IS NOT NULL
+        GROUP BY tahun ORDER BY tahun
+    """)
+    df_alumni = pd.DataFrame(cursor.fetchall())
+    fig_alumni = px.bar(df_alumni, x='tahun', y='jumlah', color='jumlah',
+                        labels={'tahun': 'Tahun', 'jumlah': 'Jumlah Alumni'},
+                        color_continuous_scale='blues', height=300)
+
+    # --- Layout Explore Cards ---
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.markdown("#### 📊 Colab Space")
+        st.plotly_chart(fig_colab, use_container_width=True)
+        if st.button("Explore", key="explore_colab"):
+            st.session_state.page = 'colab_space'
+            st.rerun()
+
+    with col2:
+        st.markdown("#### 👨‍🏫 Faculty Staff")
+        st.plotly_chart(fig_staff, use_container_width=True)
+        if st.button("Explore", key="explore_staff"):
+            st.session_state.page = 'faculty staff'
+            st.rerun()
+
+    
+    with col3:
+        st.markdown("#### 🌏 Student Inbound")
+        st.plotly_chart(fig_student, use_container_width=True)
+        if st.button("Explore", key="explore_student"):
+            st.session_state.page = 'student inbound-outbound'
+            st.rerun()
+
+    with col4:
+        st.markdown("#### 🎓 Alumni")
+        st.plotly_chart(fig_alumni, use_container_width=True)
+        if st.button("Explore", key="explore_alumni"):
+            st.session_state.page = 'alumni'
+            st.rerun()
+
+
+# Mulai Kodingan Per Dashboard
 
 elif selected_menu == "Colab Space":
     sub_colab = st.selectbox("Pilih Submenu Colab Space", ["Internasional", "Nasional"])
@@ -163,8 +287,15 @@ elif selected_menu == "Colab Space":
             'Malaysia': [3.1390, 101.6869],
             'Thailand': [13.7563, 100.5018],
             'Filipina': [13.41, 122.56],
-            'Indonesia': [-5.4264, 105.2667]
+            'Indonesia': [-5.4264, 105.2667],
+            'Kamboja': [11.5564, 104.9282],
+            'Vietnam': [21.0285, 105.8542],
+            'Timor Leste': [-8.5569, 125.5603],
+            'Laos': [17.9757, 102.6331],
+            'Kanada': [45.4215, -75.6996],
+            'Brunei Darussalam': [4.9031, 114.9398],
         }
+
         df_filtered['lat'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[0])
         df_filtered['lon'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[1])
 
@@ -281,8 +412,8 @@ elif selected_menu == "Colab Space":
 
         fig = px.bar(melted, x="nama_negara", y="Jumlah", color="Jenis", barmode="stack", height=500,
                     color_discrete_map={
-                        "Dosen Tamu": "#FFF1D3",
-                        "Akademik": "#F1DEBB",
+                        "Dosen Tamu": "#F1DEBB",
+                        "Akademik": "#FFF1D3",
                         "Riset dan Publikasi": "#E7D280",
                         "Seminar dan Workshop": "#E3BE45"
                     })
@@ -430,6 +561,27 @@ elif selected_menu == "Colab Space":
             'Sulawesi Tengah': [-0.893, 119.894],
             'Sulawesi Selatan': [-5.135, 119.412],
             'Sulawesi Tenggara': [-4.160, 122.163],
+            'Aceh': [5.5502, 95.3160],
+            'Sumatera Utara': [3.5952, 98.6722],
+            'Sumatera Barat': [-0.9471, 100.4172],
+            'Riau': [0.5071, 101.4478],
+            'Kepulauan Riau': [3.9457, 108.1429],
+            'Jambi': [-1.4852, 102.4381],
+            'Bengkulu': [-3.8004, 102.2655],
+            'Sumatera Selatan': [-3.3194, 104.9145],
+            'Kepulauan Bangka Belitung': [-2.7411, 106.4406],  # atau 'Bangka Belitung'
+            'Lampung': [-5.398, 105.266],
+            'Papua Barat': [-1.3361, 133.1747],
+            'Papua Pegunungan': [-4.2356, 138.5967],
+            'Papua Selatan': [-7.7706, 139.7271],
+            'Papua Tengah': [-3.9873, 137.1876],
+            'Papua Barat Daya': [-1.2559, 131.4184],
+            'Maluku': [-3.2385, 130.1453],
+            'Maluku Utara': [1.5700, 127.8088],
+            'Gorontalo': [0.6999, 122.4467],
+            'Papua': [-4.2699, 138.0804],
+            'Bangka Belitung': [-2.7411, 106.4406],
+            'Sulawesi Barat': [-2.5164, 119.3914],
         }
 
         df_filtered['lat'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[0])
@@ -488,8 +640,8 @@ elif selected_menu == "Colab Space":
         melted = chart_df.melt(id_vars="nama_provinsi", var_name="Jenis", value_name="Jumlah")
         fig = px.bar(melted, x="nama_provinsi", y="Jumlah", color="Jenis", barmode="stack", height=500,
                     color_discrete_map={
-                        "Dosen Tamu": "#FAF2DC",
-                        "Akademik": "#D0C7A2",
+                        "Dosen Tamu": "#D0C7A2",
+                        "Akademik": "#FAF2DC",
                         "Riset dan Publikasi": "#99BE8F",
                         "Seminar dan Workshop": "#76A98D"
                     })
@@ -520,25 +672,28 @@ elif selected_menu == "Colab Space":
 
         
 elif selected_menu == "Faculty Staff":
-    # Load dataset
-    df = pd.read_csv("wcu_data_multiline.csv")
+    # Ambil data dari database
+    conn = get_connection()
+    query = """
+        SELECT 
+            year AS Year,
+            affiliation_name AS `Affiliation Name`,
+            total_paper AS `total paper`,
+            citation_ex_self_citation AS `citation(ex self citation)`,
+            citation_per_faculty AS `Citation per faculty`
+        FROM wcu_data
+    """
+
+    df = pd.read_sql(query, conn)
+
+    # =========================== Gaya Visual ===========================
     sns.set_style("whitegrid")
 
-    # ===========================
-    # Judul Halaman
-    # ===========================
-    st.markdown("""
-    # 🌍 World Class University - Universitas Lampung  
-    <div style='font-size:28px; font-weight:bold; margin-top:-10px;'>🧑‍🏫 Faculty Staff</div>
-    """, unsafe_allow_html=True)
-
-    # ===========================
-    # Filter UI di bagian atas
-    # ===========================
+    # =========================== Filter UI ===========================
     st.markdown("### 🔍 Filter Data")
 
-    years = sorted(df['Year'].unique())
-    affiliations = sorted(df['Affiliation Name'].unique())
+    years = sorted(df['Year'].dropna().unique())
+    affiliations = sorted(df['Affiliation Name'].dropna().unique())
     dummy_faculties = [
         "Fakultas Teknik", "Fakultas Ekonomi dan Bisnis", "Fakultas Pertanian", 
         "Fakultas Keguruan dan Ilmu Pendidikan", "Fakultas Ilmu Sosial dan Ilmu Politik", 
@@ -553,17 +708,13 @@ elif selected_menu == "Faculty Staff":
     with col3:
         selected_faculty_ui = st.multiselect("🏫 Pilih Fakultas", options=dummy_faculties, default=dummy_faculties)
 
-    # ===========================
-    # Filter DataFrame (Tahun dan Afiliasi saja)
-    # ===========================
+    # =========================== Filter DataFrame ===========================
     filtered_df = df[
-        (df['Year'].isin(selected_years)) & 
+        (df['Year'].isin(selected_years)) &
         (df['Affiliation Name'].isin(selected_affiliations))
     ]
 
-    # ===========================
-    # Validasi dan Visualisasi
-    # ===========================
+    # =========================== Validasi dan Visualisasi ===========================
     if filtered_df.empty:
         st.warning("⚠ Tidak ada data yang sesuai dengan filter yang dipilih.")
     else:
@@ -590,9 +741,7 @@ elif selected_menu == "Faculty Staff":
         plt.tight_layout()
         st.pyplot(fig)
 
-        # ===========================
-        # Tabel Data
-        # ===========================
+        # =========================== Tabel Data ===========================
         def format_table(df_input):
             df_output = df_input.copy()
             df_output['Affiliation Name'] = df_output['Affiliation Name'].mask(df_output['Affiliation Name'].duplicated(), '')
@@ -606,23 +755,29 @@ elif selected_menu == "Faculty Staff":
 
 elif selected_menu == "Student Inbound-Outbound":
     # ========== Load Data ==========
+    connection = get_connection()
+
     file_path = 'data_dummy_universitas_final.xlsx'
-    df_program = pd.read_excel(file_path, sheet_name='Program')
-    df_mahasiswa = pd.read_excel(file_path, sheet_name='Mahasiswa')
-    df_jurusan = pd.read_excel(file_path, sheet_name='Jurusan')
-    df_fakultas = pd.read_excel(file_path, sheet_name='Fakultas')
-    df_negara = pd.read_excel(file_path, sheet_name='Negara')
-    df_universitas = pd.read_excel(file_path, sheet_name='Universitas')
+    df_program = pd.read_sql("SELECT * FROM program", connection)
+    df_mahasiswa = pd.read_sql("SELECT * FROM mahasiswa", connection)
+    df_jurusan = pd.read_sql("SELECT * FROM jurusan", connection)
+    df_fakultas = pd.read_sql("SELECT * FROM fakultas", connection)
+    df_negara = pd.read_sql("SELECT * FROM negara", connection)
+    df_universitas = pd.read_sql("SELECT * FROM universitas", connection)
 
     # Gabungkan semua data
     df = df_program.merge(df_mahasiswa, on='mahasiswa_id', how='left')
-    df = df.merge(df_jurusan[['jurusan_id', 'nama_jurusan']], on='jurusan_id', how='left')
-    df = df.merge(df_fakultas[['fakultas_id', 'nama_fakultas']], on='fakultas_id', how='left')
-    df = df.merge(df_negara[['negara_id', 'nama_negara']], on='negara_id', how='left')
+    df = df.merge(df_jurusan[['id_jurusan', 'nama_jurusan']], on='id_jurusan', how='left')
+    df = df.merge(df_fakultas[['id_fakultas', 'nama_fakultas']], on='id_fakultas', how='left')
+    df = df.merge(df_negara[['id_negara', 'nama_negara']], on='id_negara', how='left')
     df = df.merge(df_universitas[['universitas_id', 'nama_universitas']], on='universitas_id', how='left')
 
-    # Format durasi
+    # Konversi durasi ke integer dulu (pastikan error NaN ditangani)
+    df['durasi'] = pd.to_numeric(df['durasi'], errors='coerce').fillna(0).astype(int)
+
+    # Baru apply format durasi_str
     df['durasi_str'] = df['durasi'].apply(lambda x: f"{x} smt" if x <= 4 else f"{x//3} sem")
+
 
 
     # ========== DATA UNTUK CHART ==========
@@ -667,11 +822,20 @@ elif selected_menu == "Student Inbound-Outbound":
             options=["Semua"] + sorted(df['nama_fakultas'].dropna().unique().tolist())
         )
 
+    # Sesuaikan pilihan jurusan berdasarkan fakultas
+    if selected_fakultas == "Semua":
+        jurusan_options = sorted(df['nama_jurusan'].dropna().unique().tolist())
+    else:
+        jurusan_options = sorted(
+            df[df['nama_fakultas'] == selected_fakultas]['nama_jurusan'].dropna().unique().tolist()
+        )
+
     with col_f3:
         selected_jurusan = st.selectbox(
             "Pilih Jurusan", 
-            options=["Semua"] + sorted(df['nama_jurusan'].dropna().unique().tolist())
+            options=["Semua"] + jurusan_options
         )
+
 
     # Terapkan filter
     filtered_df = df[['nama', 'npm', 'nama_negara', 'nama_universitas',
@@ -717,25 +881,29 @@ elif selected_menu == "Student Inbound-Outbound":
 
     with col1:
         st.markdown("<h5 style='text-align: center; font-size:18px; margin-top:50px;'>Jumlah Mahasiswa Outbound/Inbound per Tahun</h5>", unsafe_allow_html=True)
-        fig1, ax1 = plt.subplots()
-        if not count_by_year_type.empty:
-            count_by_year_type.plot(kind='bar', ax=ax1, color=['cornflowerblue', 'salmon'])
-            ax1.set_ylabel("Jumlah Mahasiswa")
-            ax1.set_xlabel("Tahun")
-            ax1.set_title("Outbound vs Inbound")
-            ax1.legend(title='Tipe Program')
-        else:
-            ax1.text(0.5, 0.5, 'Tidak ada data untuk ditampilkan', ha='center', va='center', fontsize=12)
-            ax1.axis('off')
-        st.pyplot(fig1)
+        data_bar = count_by_year_type.reset_index().melt(id_vars='tahun', var_name='Tipe Program', value_name='Jumlah')
+
+        fig1 = px.bar(
+            data_bar, 
+            x="tahun", 
+            y="Jumlah", 
+            color="Tipe Program", 
+            barmode="group",
+            color_discrete_map={"Inbound": "cornflowerblue", "Outbound": "salmon"}
+        )
+
+        st.plotly_chart(fig1, use_container_width=True)
 
 
     with col2:
         st.markdown("<h5 style='text-align: center; font-size:18px; margin-top:50px;'>Negara Asal Inbound</h5>", unsafe_allow_html=True)
-        fig2, ax2 = plt.subplots()
-        inbound_countries.plot(kind='pie', autopct='%1.1f%%', ax=ax2, startangle=90)
-        ax2.set_ylabel('')
-        st.pyplot(fig2)
+        fig2 = px.pie(
+            names=inbound_countries.index,
+            values=inbound_countries.values,
+            hole=0.3
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+
 
 
     # ---------- BARIS BAWAH: Tabel ----------
@@ -770,48 +938,49 @@ elif selected_menu == "Student Inbound-Outbound":
 
     with col6:
         st.markdown("<h5 style='text-align: center; font-size:18px;'>Rasio Dosen dan Mahasiswa</h5>", unsafe_allow_html=True)
-        fig3, ax3 = plt.subplots(figsize=(4, 4))
-        wedges, texts, autotexts = ax3.pie(
-            [rasio_dosen, rasio_mahasiswa],
-            colors=["yellow", "green"],
-            startangle=90,
-            wedgeprops=dict(width=0.5),
-            autopct='%1.0f%%'
+
+        # Data
+        labels_rasio = ["Dosen", "Mahasiswa"]
+        values_rasio = [rasio_dosen, rasio_mahasiswa]
+
+        # Plotly Pie Chart
+        fig3 = px.pie(
+            names=labels_rasio,
+            values=values_rasio,
+            hole=0.4,
+            color_discrete_sequence=["yellow", "green"]
         )
-        ax3.set(aspect="equal")
-        ax3.text(0, 0, f"{rasio_dosen} : {rasio_mahasiswa}", ha='center', va='center', fontsize=12)
-        ax3.legend(['Dosen', 'Mahasiswa'], loc='center left', bbox_to_anchor=(1, 0.5))
-        st.pyplot(fig3)
+        fig3.update_traces(textinfo='percent+label')
+        fig3.update_layout(
+            showlegend=True,
+            annotations=[dict(text=f"{rasio_dosen}:{rasio_mahasiswa}", x=0.5, y=0.5, font_size=14, showarrow=False)],
+            margin=dict(t=10, b=10, l=10, r=10)
+        )
+        st.plotly_chart(fig3, use_container_width=True)
 
     with col7:
         st.markdown("<h5 style='text-align: center; font-size:18px;'>Presentase Mahasiswa I/O</h5>", unsafe_allow_html=True)
-        fig4, ax4 = plt.subplots()
+
         total_io = total_inbound + total_outbound
 
         if total_io > 0:
-            inbound_pct = round((total_inbound / total_io) * 100, 2)
-            outbound_pct = round((total_outbound / total_io) * 100, 2)
-        else:
-            inbound_pct = 0
-            outbound_pct = 0
+            labels_io = ["Inbound", "Outbound"]
+            values_io = [total_inbound, total_outbound]
 
-        # Saat plotting
-        if total_io > 0:
-            wedges, texts, autotexts = ax4.pie(
-                [inbound_pct, outbound_pct],
-                labels=["Inbound", "Outbound"],
-                colors=["yellow", "green"],
-                startangle=90,
-                autopct='%1.0f%%',
-                wedgeprops=dict(width=0.5)
+            fig4 = px.pie(
+                names=labels_io,
+                values=values_io,
+                hole=0.4,
+                color_discrete_sequence=["yellow", "green"]
             )
+            fig4.update_traces(textinfo='percent+label')
+            fig4.update_layout(
+                showlegend=True,
+                margin=dict(t=10, b=10, l=10, r=10)
+            )
+            st.plotly_chart(fig4, use_container_width=True)
         else:
-            ax4.text(0.5, 0.5, "Tidak ada data", ha='center', va='center', fontsize=12)
-            ax4.axis('off')
-
-        ax4.set(aspect="equal")
-        ax4.legend(["Inbound", "Outbound"], loc='center left', bbox_to_anchor=(1, 0.5))
-        st.pyplot(fig4)
+            st.markdown("<div style='text-align:center; font-size:16px;'>Tidak ada data untuk ditampilkan</div>", unsafe_allow_html=True)
 
 elif selected_menu == "Alumni":
     st.markdown('<div class="title-box">🎓 Alumni</div>', unsafe_allow_html=True)
@@ -820,19 +989,19 @@ elif selected_menu == "Alumni":
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Ambil data dari database alumni
+    # Ambil data dari database alumni.
     cursor.execute("""
         SELECT 
             a.nama, 
-            a.tahun_lulus AS `Tahun Lulus`, 
+            YEAR(a.tahun_lulus) AS `Tahun Lulus`, 
             f.nama_fakultas AS Fakultas,
             p.nama_prodi AS `Program Studi`,
             s.posisi_kerja AS `Status Kerja`,
-            CONCAT(DATEDIFF(MONTH, a.tahun_lulus, a.waktu_dapat_kerja), ' Bulan') AS `Waktu Mendapatkan Kerja`
+            CONCAT(TIMESTAMPDIFF(MONTH, a.tahun_lulus, a.waktu_dapat_kerja), ' Bulan') AS `Waktu Mendapatkan Kerja`
         FROM alumni a
         JOIN program_studi p ON a.program_studi_id = p.id
-        JOIN fakultas f ON p.fakultas_id = f.id
-        LEFT JOIN status_kerja s ON a.status_kerja_id = s.id
+        JOIN fakultas f ON p.fakultas_id = f.id_fakultas
+        LEFT JOIN status_kerja s ON a.status_kerja_id = s.id_status
         WHERE a.waktu_dapat_kerja IS NOT NULL
     """)
     data = cursor.fetchall()
