@@ -678,12 +678,12 @@ elif selected_menu == "Faculty Staff":
         SELECT 
             year AS Year,
             affiliation_name AS `Affiliation Name`,
-            department_name AS `Department`,
             total_paper AS `total paper`,
             citation_ex_self_citation AS `citation(ex self citation)`,
             citation_per_faculty AS `Citation per faculty`
         FROM wcu_data
     """
+
     df = pd.read_sql(query, conn)
 
     # =========================== Gaya Visual ===========================
