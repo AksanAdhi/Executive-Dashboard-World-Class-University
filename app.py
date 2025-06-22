@@ -215,9 +215,19 @@ if selected_menu == "Home":
 # Mulai Kodingan Per Dashboard
 
 elif selected_menu == "Colab Space":
-    sub_colab = st.selectbox("Pilih Submenu Colab Space", ["Internasional", "Nasional"])
+    st.markdown("""
+    <style>
+        .stTabs [data-baseweb="tab"] {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1E4EB3;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-    if sub_colab == "Internasional":
+    tab1, tab2 = st.tabs(["🌐 Internasional", "🇮🇩 Nasional"])
+
+    with tab1:
         st.markdown('<div class="title-box">International Collaboration</div>', unsafe_allow_html=True)
 
         st.markdown("""      
@@ -445,8 +455,7 @@ elif selected_menu == "Colab Space":
 
 
 
-    elif sub_colab == "Nasional":
-
+    with tab2:
         st.markdown('<div class="title-box">National Collaboration</div>', unsafe_allow_html=True)
         st.markdown("""      
             <div style="text-align: center; color: #0b2a65; font-size: 16px;">
