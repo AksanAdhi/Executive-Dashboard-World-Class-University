@@ -66,7 +66,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER ---
-col1, col2 = st.columns([0.1, 1])
+col1, col2 = st.columns([0.1, 2])
 with col1:
     st.image("Logo_Unila.png", width=60)
 with col2:
@@ -101,17 +101,21 @@ selected_menu = option_menu(
     default_index=["Home", "Colab Space", "Faculty Staff", "Student Inbound-Outbound", "Alumni"].index(st.session_state.selected_menu)
 )
 
+
 # Update session_state jika user mengklik langsung navbar
 st.session_state.selected_menu = selected_menu
+st.markdown("<hr style='margin-top:0.5rem; margin-bottom:1.5rem; border:1px solid #ccc;' />", unsafe_allow_html=True)
 
 
 if selected_menu == "Home":
     # -------------------------- HEADER WCU ANALYSIS --------------------------
 
 # Section: WCU Analysis Banner
-    col_map, col_text = st.columns([1, 2])
+    col_map, col_text = st.columns([2, 4])
     with col_map:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/640px-Equirectangular_projection_SW.jpg", use_container_width=True)
+        st.image("peta_dunia.png", use_container_width=True)
+
+        # st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/640px-Equirectangular_projection_SW.jpg", use_container_width=True)
 
     with col_text:
         st.markdown("""
@@ -125,6 +129,7 @@ if selected_menu == "Home":
                     
         """, unsafe_allow_html=True)
 
+    st.markdown("<hr style='margin-top:1rem; margin-bottom:0.5rem; border:1px solid #ccc;' />", unsafe_allow_html=True)
     st.markdown("## Explore WCU")
 
     # --- Database Connection ---
