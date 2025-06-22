@@ -104,11 +104,11 @@ selected_menu = option_menu(
 
 # Update session_state jika user mengklik langsung navbar
 st.session_state.selected_menu = selected_menu
-st.markdown("<hr style='margin-top:0.5rem; margin-bottom:1.5rem; border:1px solid #ccc;' />", unsafe_allow_html=True)
 
 
 if selected_menu == "Home":
     # -------------------------- HEADER WCU ANALYSIS --------------------------
+    st.markdown("<hr style='margin-top:0.5rem; margin-bottom:1.5rem; border:1px solid #ccc;' />", unsafe_allow_html=True)
 
 # Section: WCU Analysis Banner
     col_map, col_text = st.columns([2, 4])
@@ -129,7 +129,7 @@ if selected_menu == "Home":
                     
         """, unsafe_allow_html=True)
 
-    st.markdown("<hr style='margin-top:1rem; margin-bottom:0.5rem; border:1px solid #ccc;' />", unsafe_allow_html=True)
+    st.markdown("<hr style='margin-top:1rem; margin-bottom:2rem; border:1px solid #ccc;' />", unsafe_allow_html=True)
     st.markdown("## Explore WCU")
 
     # --- Database Connection ---
@@ -227,8 +227,13 @@ elif selected_menu == "Colab Space":
             font-weight: bold;
             color: #1E4EB3;
         }
+        div[data-testid="stTabs"] {
+            margin-top: -40px;
+        }
     </style>
     """, unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top: -2rem'></div>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["🌐 Internasional", "🇮🇩 Nasional"])
 
