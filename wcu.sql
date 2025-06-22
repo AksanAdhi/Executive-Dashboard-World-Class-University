@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 14, 2025 at 08:16 AM
+-- Generation Time: Jun 22, 2025 at 10:21 AM
 -- Server version: 10.4.28-MariaDB-log
 -- PHP Version: 8.2.4
 
@@ -568,44 +568,45 @@ INSERT INTO `mahasiswa` (`mahasiswa_id`, `npm`, `nama`, `semester`, `id_jurusan`
 CREATE TABLE `negara` (
   `id_negara` int(11) NOT NULL,
   `nama_negara` varchar(255) NOT NULL,
-  `kode_iso` varchar(3) DEFAULT NULL
+  `latitude` double DEFAULT NULL,
+  `longitude` double DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `negara`
 --
 
-INSERT INTO `negara` (`id_negara`, `nama_negara`, `kode_iso`) VALUES
-(1, 'Indonesia', 'ID'),
-(2, 'Malaysia', 'MY'),
-(3, 'Singapura', 'SG'),
-(4, 'Thailand', 'TH'),
-(5, 'Vietnam', 'VN'),
-(6, 'Filipina', 'PH'),
-(7, 'Brunei Darussalam', 'BN'),
-(8, 'Kamboja', 'KH'),
-(9, 'Laos', 'LA'),
-(10, 'Myanmar', 'MM'),
-(11, 'Timor Leste', 'TL'),
-(12, 'Amerika Serikat', 'US'),
-(13, 'Kanada', 'CA'),
-(14, 'Tiongkok', 'CN'),
-(15, 'Jepang', 'JP'),
-(16, 'Korea Selatan', 'KR'),
-(17, 'India', 'IN'),
-(18, 'Australia', 'AU'),
-(19, 'Rusia', 'RU'),
-(20, 'Arab Saudi', 'SA'),
-(21, 'Jerman', 'DE'),
-(22, 'Prancis', 'FR'),
-(23, 'Britania Raya', 'GB'),
-(24, 'Brazil', 'BR'),
-(25, 'Afrika Selatan', 'ZA'),
-(26, 'Italia', 'IT'),
-(27, 'Belanda', 'NL'),
-(28, 'Spanyol', 'ES'),
-(29, 'Turki', 'TR'),
-(30, 'Swiss', 'CH');
+INSERT INTO `negara` (`id_negara`, `nama_negara`, `latitude`, `longitude`) VALUES
+(1, 'Indonesia', -5.4264, 105.2667),
+(2, 'Malaysia', 3.139, 101.6869),
+(3, 'Singapura', 1.3521, 103.8198),
+(4, 'Thailand', 13.7563, 100.5018),
+(5, 'Vietnam', 21.0285, 105.8542),
+(6, 'Filipina', 13.41, 122.56),
+(7, 'Brunei Darussalam', 4.9031, 114.9398),
+(8, 'Kamboja', 11.5564, 104.9282),
+(9, 'Laos', 17.9757, 102.6331),
+(10, 'Myanmar', 19.7633, 96.0785),
+(11, 'Timor Leste', -8.5569, 125.5603),
+(12, 'Amerika Serikat', 37.7749, -122.4194),
+(13, 'Kanada', 45.4215, -75.6996),
+(14, 'Tiongkok', 39.9042, 116.4074),
+(15, 'Jepang', 35.6895, 139.6917),
+(16, 'Korea Selatan', 37.5665, 126.978),
+(17, 'India', 28.6139, 77.209),
+(18, 'Australia', -35.2809, 149.13),
+(19, 'Rusia', 55.7558, 37.6173),
+(20, 'Arab Saudi', 24.7136, 46.6753),
+(21, 'Jerman', 52.52, 13.405),
+(22, 'Prancis', 48.8566, 2.3522),
+(23, 'Britania Raya', 51.5074, -0.1278),
+(24, 'Brazil', -23.5505, -46.6333),
+(25, 'Afrika Selatan', -25.7479, 28.2293),
+(26, 'Italia', 41.8719, 12.5674),
+(27, 'Belanda', 52.3676, 4.9041),
+(28, 'Spanyol', 40.4637, -3.7492),
+(29, 'Turki', 38.9637, 35.2433),
+(30, 'Swiss', 46.8182, 8.2275);
 
 -- --------------------------------------------------------
 
@@ -760,52 +761,53 @@ INSERT INTO `program_studi` (`id`, `nama_prodi`, `fakultas_id`) VALUES
 CREATE TABLE `provinsi` (
   `id_provinsi` int(11) NOT NULL,
   `nama_provinsi` varchar(255) NOT NULL,
-  `kode_posisi` varchar(50) DEFAULT NULL
+  `latitude` double DEFAULT NULL,
+  `longitude` double DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `provinsi`
 --
 
-INSERT INTO `provinsi` (`id_provinsi`, `nama_provinsi`, `kode_posisi`) VALUES
-(1, 'Aceh', '11'),
-(2, 'Sumatera Utara', '12'),
-(3, 'Sumatera Barat', '13'),
-(4, 'Riau', '14'),
-(5, 'Jambi', '15'),
-(6, 'Sumatera Selatan', '16'),
-(7, 'Bengkulu', '17'),
-(8, 'Lampung', '18'),
-(9, 'Kepulauan Bangka Belitung', '19'),
-(10, 'Kepulauan Riau', '21'),
-(11, 'DKI Jakarta', '31'),
-(12, 'Jawa Barat', '32'),
-(13, 'Jawa Tengah', '33'),
-(14, 'DI Yogyakarta', '34'),
-(15, 'Jawa Timur', '35'),
-(16, 'Banten', '36'),
-(17, 'Bali', '51'),
-(18, 'Nusa Tenggara Barat', '52'),
-(19, 'Nusa Tenggara Timur', '53'),
-(20, 'Kalimantan Barat', '61'),
-(21, 'Kalimantan Tengah', '62'),
-(22, 'Kalimantan Selatan', '63'),
-(23, 'Kalimantan Timur', '64'),
-(24, 'Kalimantan Utara', '65'),
-(25, 'Sulawesi Utara', '71'),
-(26, 'Gorontalo', '75'),
-(27, 'Sulawesi Tengah', '72'),
-(28, 'Sulawesi Barat', '76'),
-(29, 'Sulawesi Selatan', '73'),
-(30, 'Sulawesi Tenggara', '74'),
-(31, 'Maluku', '81'),
-(32, 'Maluku Utara', '82'),
-(33, 'Papua', '91'),
-(34, 'Papua Barat', '92'),
-(35, 'Papua Pegunungan', '93'),
-(36, 'Papua Tengah', '94'),
-(37, 'Papua Selatan', '95'),
-(38, 'Papua Barat Daya', '96');
+INSERT INTO `provinsi` (`id_provinsi`, `nama_provinsi`, `latitude`, `longitude`) VALUES
+(1, 'Aceh', 5.5502, 95.316),
+(2, 'Sumatera Utara', 3.5952, 98.6722),
+(3, 'Sumatera Barat', -0.9471, 100.4172),
+(4, 'Riau', 0.5071, 101.4478),
+(5, 'Jambi', -1.61, 103.6131),
+(6, 'Sumatera Selatan', -3.3194, 104.914),
+(7, 'Bengkulu', -3.8004, 102.2655),
+(8, 'Lampung', -5.45, 105.2667),
+(9, 'Kepulauan Bangka Belitung', -2.7411, 106.4406),
+(10, 'Kepulauan Riau', 3.9457, 108.1429),
+(11, 'DKI Jakarta', -6.2088, 106.8456),
+(12, 'Jawa Barat', -6.9039, 107.6186),
+(13, 'Jawa Tengah', -7.15, 110.1403),
+(14, 'DI Yogyakarta', -7.8014, 110.3649),
+(15, 'Jawa Timur', -7.5361, 112.2384),
+(16, 'Banten', -6.12, 106.15),
+(17, 'Bali', -8.3405, 115.092),
+(18, 'Nusa Tenggara Barat', -8.652, 117.361),
+(19, 'Nusa Tenggara Timur', -10.1772, 123.607),
+(20, 'Kalimantan Barat', -0.029, 109.342),
+(21, 'Kalimantan Tengah', -1.681, 113.382),
+(22, 'Kalimantan Selatan', -3.319, 114.591),
+(23, 'Kalimantan Timur', 0.538, 116.419),
+(24, 'Kalimantan Utara', 3.073, 117.645),
+(25, 'Sulawesi Utara', 1.493, 124.842),
+(26, 'Gorontalo', 0.6994, 122.4467),
+(27, 'Sulawesi Tengah', -0.893, 119.894),
+(28, 'Sulawesi Barat', -2.8441, 119.2321),
+(29, 'Sulawesi Selatan', -5.135, 119.412),
+(30, 'Sulawesi Tenggara', -4.16, 122.163),
+(31, 'Maluku', -3.2385, 130.1453),
+(32, 'Maluku Utara', 1.57, 127.808),
+(33, 'Papua', -4.2699, 138.0804),
+(34, 'Papua Barat', -1.3361, 133.1746),
+(35, 'Papua Pegunungan', -4.2116, 138.9243),
+(36, 'Papua Tengah', -2.1914, 137.2982),
+(37, 'Papua Selatan', -7.511, 140.394),
+(38, 'Papua Barat Daya', -0.8615, 132.663);
 
 -- --------------------------------------------------------
 
