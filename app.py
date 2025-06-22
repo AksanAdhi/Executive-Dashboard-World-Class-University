@@ -671,7 +671,7 @@ elif selected_menu == "Faculty Staff":
         (df['Affiliation Name'].isin(selected_affiliations))
     ]
 
-    # =========================== Validasi dan Visualisasi ===========================
+        # =========================== Validasi dan Visualisasi ===========================
     if filtered_df.empty:
         st.warning("⚠ Tidak ada data yang sesuai dengan filter yang dipilih.")
     else:
@@ -681,33 +681,70 @@ elif selected_menu == "Faculty Staff":
         axs[0].set_title('📄 Total Paper')
         axs[0].set_xlabel("Tahun")
         axs[0].set_ylabel("Total Paper")
+        axs[0].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.0f}'.format(x)))  # Tahun sebagai integer
         axs[0].legend(title="Afiliasi", fontsize='small', title_fontsize='medium', loc='upper left', bbox_to_anchor=(1, 1))
 
         sns.lineplot(data=filtered_df, x='Year', y='citation(ex self citation)', hue='Affiliation Name', marker='o', ax=axs[1])
         axs[1].set_title('🔍 Citation (ex Self Citation)')
         axs[1].set_xlabel("Tahun")
         axs[1].set_ylabel("Citation")
+        axs[1].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.0f}'.format(x)))  # Tahun sebagai integer
         axs[1].legend(title="Afiliasi", fontsize='small', title_fontsize='medium', loc='upper left', bbox_to_anchor=(1, 1))
 
         sns.lineplot(data=filtered_df, x='Year', y='Citation per faculty', hue='Affiliation Name', marker='o', ax=axs[2])
         axs[2].set_title('👩‍🏫 Citation Per Faculty')
         axs[2].set_xlabel("Tahun")
         axs[2].set_ylabel("Citation per Faculty")
+        axs[2].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.0f}'.format(x)))  # Tahun sebagai integer
         axs[2].legend(title="Afiliasi", fontsize='small', title_fontsize='medium', loc='upper left', bbox_to_anchor=(1, 1))
 
         plt.tight_layout()
         st.pyplot(fig)
 
-        # =========================== Tabel Data ===========================
-        def format_table(df_input):
-            df_output = df_input.copy()
-            df_output['Affiliation Name'] = df_output['Affiliation Name'].mask(df_output['Affiliation Name'].duplicated(), '')
-            return df_output
 
-        st.markdown("### 📊 Data Table")
-        grouped = filtered_df.sort_values(by=['Affiliation Name', 'Year'])
-        grouped = format_table(grouped)
-        st.dataframe(grouped, use_container_width=True)
+        # =========================== Tabel HTML dengan Rowspan ===========================
+        def generate_html_table_with_rowspan(df):
+            # Ubah urutan kolom agar Year ditampilkan duluan
+            columns_order = ['Year', 'Affiliation Name', 'total paper', 'citation(ex self citation)', 'Citation per faculty']
+            df = df[columns_order]
+
+            html = '<table border="1" style="border-collapse: collapse; width: 100%; font-family: Arial; font-size: 14px;">'
+            html += "<tr>"
+            html += "<th style='padding: 8px; background-color: #f0f0f0;'>Year</th>"
+            html += "<th style='padding: 8px; background-color: #f0f0f0;'>Affiliation Name</th>"
+            html += "<th style='padding: 8px; background-color: #f0f0f0;'>total paper</th>"
+            html += "<th style='padding: 8px; background-color: #f0f0f0;'>citation(ex self citation)</th>"
+            html += "<th style='padding: 8px; background-color: #f0f0f0;'>Citation per faculty</th>"
+            html += "</tr>"
+
+            # Urutkan berdasarkan Affiliation dan Year
+            df_sorted = df.sort_values(by=['Affiliation Name', 'Year'])
+            rowspan_dict = df_sorted['Affiliation Name'].value_counts().to_dict()
+
+            prev_affil = None
+
+            for _, row in df_sorted.iterrows():
+                html += "<tr>"
+                html += f"<td style='padding: 8px;'>{row['Year']}</td>"
+                current_affil = row['Affiliation Name']
+                if current_affil != prev_affil:
+                    rowspan = rowspan_dict[current_affil]
+                    html += f"<td rowspan='{rowspan}' style='padding: 8px; vertical-align: middle;'>{current_affil}</td>"
+                    prev_affil = current_affil
+                # Kolom lainnya
+                html += f"<td style='padding: 8px;'>{row['total paper']}</td>"
+                html += f"<td style='padding: 8px;'>{row['citation(ex self citation)']}</td>"
+                html += f"<td style='padding: 8px;'>{row['Citation per faculty']}</td>"
+                html += "</tr>"
+
+            html += "</table>"
+            return html
+
+        # Tampilkan tabel
+        st.markdown("### 📊 Data Table (Rowspan)")
+        html_table = generate_html_table_with_rowspan(filtered_df)
+        st.markdown(html_table, unsafe_allow_html=True)
+
 
 
 elif selected_menu == "Student Inbound-Outbound":
