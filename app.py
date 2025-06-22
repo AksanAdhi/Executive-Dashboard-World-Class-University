@@ -235,7 +235,7 @@ elif selected_menu == "Colab Space":
 
     st.markdown("<div style='margin-top: -2rem'></div>", unsafe_allow_html=True)
 
-    tab1, tab2 = st.tabs(["🌐 Internasional", "🇮🇩 Nasional"])
+    tab1, tab2 = st.tabs(["🌐 International", "🇮🇩 National"])
 
     with tab1:
         st.markdown('<div class="title-box">International Collaboration</div>', unsafe_allow_html=True)
@@ -255,7 +255,7 @@ elif selected_menu == "Colab Space":
         """, unsafe_allow_html=True)
 
 
-        # --- Ambil data dari database
+        # --- Ambil data dari database kolaborasi internasional + koordinat negara
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
@@ -263,6 +263,8 @@ elif selected_menu == "Colab Space":
                 j.nama_jurusan, 
                 f.nama_fakultas, 
                 n.nama_negara, 
+                n.latitude,
+                n.longitude,
                 jk.nama_jenis
             FROM kolaborasi_internasional ki
             JOIN jurusan j ON ki.id_jurusan = j.id_jurusan
@@ -291,33 +293,8 @@ elif selected_menu == "Colab Space":
             df_filtered = df.copy()
             available_majors = sorted(df['nama_jurusan'].unique())
 
-        # --- Tambahkan koordinat negara
-        coords = {
-            'Amerika Serikat': [37.7749, -122.4194],
-            'Jepang': [35.6895, 139.6917],
-            'Britania Raya': [51.5074, -0.1278],
-            'Tiongkok': [39.9042, 116.4074],
-            'Jerman': [52.52, 13.4050],
-            'Prancis': [48.8566, 2.3522],
-            'India': [28.6139, 77.2090],
-            'Australia': [-35.2809, 149.13],
-            'Taiwan': [23.6978, 120.9605],
-            'Korea Selatan': [37.5665, 126.9780],
-            'Singapura': [1.3521, 103.8198],
-            'Malaysia': [3.1390, 101.6869],
-            'Thailand': [13.7563, 100.5018],
-            'Filipina': [13.41, 122.56],
-            'Indonesia': [-5.4264, 105.2667],
-            'Kamboja': [11.5564, 104.9282],
-            'Vietnam': [21.0285, 105.8542],
-            'Timor Leste': [-8.5569, 125.5603],
-            'Laos': [17.9757, 102.6331],
-            'Kanada': [45.4215, -75.6996],
-            'Brunei Darussalam': [4.9031, 114.9398],
-        }
-
-        df_filtered['lat'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[0])
-        df_filtered['lon'] = df_filtered['nama_negara'].map(lambda x: coords.get(x, [0, 0])[1])
+        df_filtered['lat'] = df_filtered['latitude'].fillna(0)
+        df_filtered['lon'] = df_filtered['longitude'].fillna(0)
 
         # --- Sidebar jurusan
         col_map, col_info = st.columns([4, 1.5])
@@ -483,7 +460,7 @@ elif selected_menu == "Colab Space":
         """, unsafe_allow_html=True)
 
 
-        # --- Ambil data kolaborasi nasional dari database
+        # --- Ambil data kolaborasi nasional dari database + lat lon
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
@@ -491,6 +468,8 @@ elif selected_menu == "Colab Space":
                 j.nama_jurusan, 
                 f.nama_fakultas,
                 p.nama_provinsi,
+                p.latitude,
+                p.longitude,
                 jk.nama_jenis
             FROM kolaborasi_nasional kn
             JOIN jurusan j ON kn.id_jurusan = j.id_jurusan
@@ -500,6 +479,7 @@ elif selected_menu == "Colab Space":
         """)
         data = cursor.fetchall()
         df = pd.DataFrame(data)
+
 
         # --- Dropdown fakultas dan jurusan (dinamis)
         st.markdown('<div class="filter-divider"></div>', unsafe_allow_html=True)
@@ -560,51 +540,9 @@ elif selected_menu == "Colab Space":
             </div>
             """, unsafe_allow_html=True)
 
-        # --- Koordinat provinsi (sederhana/manual)
-        coords = {
-            'DKI Jakarta': [-6.2, 106.8],
-            'Jawa Barat': [-6.9, 107.6],
-            'Jawa Tengah': [-7.0, 110.4],
-            'DI Yogyakarta': [-7.8, 110.4],
-            'Jawa Timur': [-7.5, 112.7],
-            'Banten': [-6.2, 106.1],
-            'Bali': [-8.4, 115.2],
-            'Nusa Tenggara Barat': [-8.652, 117.361],
-            'Nusa Tenggara Timur': [-10.177, 123.607],
-            'Kalimantan Barat': [-0.029, 109.342],
-            'Kalimantan Tengah': [-1.681, 113.382],
-            'Kalimantan Selatan': [-3.319, 114.591],
-            'Kalimantan Timur': [0.538, 116.419],
-            'Kalimantan Utara': [3.073, 117.645],
-            'Sulawesi Utara': [1.493, 124.842],
-            'Sulawesi Tengah': [-0.893, 119.894],
-            'Sulawesi Selatan': [-5.135, 119.412],
-            'Sulawesi Tenggara': [-4.160, 122.163],
-            'Aceh': [5.5502, 95.3160],
-            'Sumatera Utara': [3.5952, 98.6722],
-            'Sumatera Barat': [-0.9471, 100.4172],
-            'Riau': [0.5071, 101.4478],
-            'Kepulauan Riau': [3.9457, 108.1429],
-            'Jambi': [-1.4852, 102.4381],
-            'Bengkulu': [-3.8004, 102.2655],
-            'Sumatera Selatan': [-3.3194, 104.9145],
-            'Kepulauan Bangka Belitung': [-2.7411, 106.4406],  # atau 'Bangka Belitung'
-            'Lampung': [-5.398, 105.266],
-            'Papua Barat': [-1.3361, 133.1747],
-            'Papua Pegunungan': [-4.2356, 138.5967],
-            'Papua Selatan': [-7.7706, 139.7271],
-            'Papua Tengah': [-3.9873, 137.1876],
-            'Papua Barat Daya': [-1.2559, 131.4184],
-            'Maluku': [-3.2385, 130.1453],
-            'Maluku Utara': [1.5700, 127.8088],
-            'Gorontalo': [0.6999, 122.4467],
-            'Papua': [-4.2699, 138.0804],
-            'Bangka Belitung': [-2.7411, 106.4406],
-            'Sulawesi Barat': [-2.5164, 119.3914],
-        }
+        df_filtered['lat'] = df_filtered['latitude'].fillna(0)
+        df_filtered['lon'] = df_filtered['longitude'].fillna(0)
 
-        df_filtered['lat'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[0])
-        df_filtered['lon'] = df_filtered['nama_provinsi'].map(lambda x: coords.get(x, [0, 0])[1])
 
         # --- Peta interaktif
         with col_map:
