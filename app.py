@@ -677,25 +677,30 @@ elif selected_menu == "Faculty Staff":
     else:
         fig, axs = plt.subplots(1, 3, figsize=(24, 6))
 
+        unique_years = sorted(filtered_df['Year'].unique())
+
         sns.lineplot(data=filtered_df, x='Year', y='total paper', hue='Affiliation Name', marker='o', ax=axs[0])
+        axs[0].set_xticks(unique_years)
+        axs[0].set_xticklabels([str(int(y)) for y in unique_years])
         axs[0].set_title('📄 Total Paper')
         axs[0].set_xlabel("Tahun")
         axs[0].set_ylabel("Total Paper")
-        axs[0].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.0f}'.format(x)))  # Tahun sebagai integer
         axs[0].legend(title="Afiliasi", fontsize='small', title_fontsize='medium', loc='upper left', bbox_to_anchor=(1, 1))
 
         sns.lineplot(data=filtered_df, x='Year', y='citation(ex self citation)', hue='Affiliation Name', marker='o', ax=axs[1])
+        axs[1].set_xticks(unique_years)
+        axs[1].set_xticklabels([str(int(y)) for y in unique_years])
         axs[1].set_title('🔍 Citation (ex Self Citation)')
         axs[1].set_xlabel("Tahun")
         axs[1].set_ylabel("Citation")
-        axs[1].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.0f}'.format(x)))  # Tahun sebagai integer
         axs[1].legend(title="Afiliasi", fontsize='small', title_fontsize='medium', loc='upper left', bbox_to_anchor=(1, 1))
 
         sns.lineplot(data=filtered_df, x='Year', y='Citation per faculty', hue='Affiliation Name', marker='o', ax=axs[2])
+        axs[2].set_xticks(unique_years)
+        axs[2].set_xticklabels([str(int(y)) for y in unique_years])
         axs[2].set_title('👩‍🏫 Citation Per Faculty')
         axs[2].set_xlabel("Tahun")
         axs[2].set_ylabel("Citation per Faculty")
-        axs[2].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: '{:.0f}'.format(x)))  # Tahun sebagai integer
         axs[2].legend(title="Afiliasi", fontsize='small', title_fontsize='medium', loc='upper left', bbox_to_anchor=(1, 1))
 
         plt.tight_layout()
