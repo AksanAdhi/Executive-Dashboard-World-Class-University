@@ -895,8 +895,9 @@ elif selected_menu == "Student Inbound-Outbound":
 
     # Update data untuk chart
     count_by_year_type = filtered_df.groupby(['tahun', 'tipe_program']).size().unstack(fill_value=0).sort_index()
-    # Tetap gunakan data asli untuk pie chart negara inbound
-    inbound_countries = df[df['tipe_program'] == 'Inbound']['nama_negara'].value_counts()
+    # Gunakan data hasil filter untuk chart negara inbound
+    inbound_countries = filtered_df[filtered_df['tipe_program'] == 'Inbound']['nama_negara'].value_counts()
+
 
 
     total_inbound = (filtered_df['tipe_program'] == 'Inbound').sum()
