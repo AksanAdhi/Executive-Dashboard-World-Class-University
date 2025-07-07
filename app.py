@@ -752,6 +752,28 @@ elif selected_menu == "Faculty Staff":
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# i / o
+
 elif selected_menu == "Student Inbound-Outbound":
     # ========== Load Data ==========
     connection = get_connection()
@@ -783,9 +805,18 @@ elif selected_menu == "Student Inbound-Outbound":
     count_by_year_type = df.groupby(['tahun', 'tipe_program']).size().unstack(fill_value=0).sort_index()
     inbound_countries = df[df['tipe_program'] == 'Inbound']['nama_negara'].value_counts()
 
-    rasio_dosen = 1
-    rasio_mahasiswa = 10
+    jumlah_dosen = pd.read_sql("SELECT COUNT(*) FROM dosen", connection).iloc[0, 0]
+    jumlah_mahasiswa = len(df_mahasiswa)
 
+    rasio_dosen = jumlah_dosen if jumlah_dosen > 0 else 1
+    rasio_mahasiswa = jumlah_mahasiswa if jumlah_mahasiswa > 0 else 1
+
+
+    total_inbound = (df['tipe_program'] == 'Inbound').sum()
+    total_outbound = (df['tipe_program'] == 'Outbound').sum()
+    total_io = total_inbound + total_outbound
+    inbound_pct = round((total_inbound / total_io) * 100, 2) if total_io else 0
+    outbound_pct = round((total_outbound / total_io) * 100, 2) if total_io else 0
     total_inbound = (df['tipe_program'] == 'Inbound').sum()
     total_outbound = (df['tipe_program'] == 'Outbound').sum()
     total_io = total_inbound + total_outbound
@@ -980,6 +1011,25 @@ elif selected_menu == "Student Inbound-Outbound":
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.markdown("<div style='text-align:center; font-size:16px;'>Tidak ada data untuk ditampilkan</div>", unsafe_allow_html=True)
+
+
+# i / o
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 elif selected_menu == "Alumni":
     st.markdown('<div class="title-box">🎓 Alumni</div>', unsafe_allow_html=True)
